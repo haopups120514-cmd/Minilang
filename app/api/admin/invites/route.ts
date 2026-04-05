@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     db.auth.admin.listUsers({ perPage: 1000 }),
   ]);
 
-  const emailMap = Object.fromEntries((users ?? []).map((u) => [u.id, u.email]));
+  const emailMap = Object.fromEntries((users ?? []).map((u: { id: string; email?: string }) => [u.id, u.email]));
   const referralToUser = Object.fromEntries(
     (credits ?? []).map((c: Record<string, unknown>) => [c.referral_code, c.user_id])
   );
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 
   // Leaderboard: count invites per inviter
   const countMap: Record<string, { email: string; count: number }> = {};
-  inviteEvents.forEach((ev) => {
+  inviteEvents.forEach((ev: { inviterId: string; inviterEmail: string }) => {
     if (!countMap[ev.inviterId]) countMap[ev.inviterId] = { email: ev.inviterEmail, count: 0 };
     countMap[ev.inviterId].count++;
   });
