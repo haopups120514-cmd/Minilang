@@ -1723,30 +1723,74 @@ ${entries}${summary}${notes}</body></html>`;
             />
           </div>
 
-          {/* Usage stats */}
-          {sessions.length > 0 && (() => {
-            const totalMins = Math.round(sessions.reduce((n, s) => n + (s.durationSecs ?? 0), 0) / 60);
-            const totalEntries = sessions.reduce((n, s) => n + s.transcripts.length, 0);
-            return (
-              <div className="shrink-0 border-t border-white/5 p-4">
-                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">我的用量</p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] text-slate-500">总课程</span>
-                    <span className="text-[12px] font-mono text-slate-300 tabular-nums">{sessions.length} 节</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] text-slate-500">总录音</span>
-                    <span className="text-[12px] font-mono text-slate-300 tabular-nums">{totalMins} 分钟</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] text-slate-500">总转写</span>
-                    <span className="text-[12px] font-mono text-slate-300 tabular-nums">{totalEntries} 条</span>
-                  </div>
+          {/* Credits section */}
+          {creditsRemaining !== null && (
+            <div className="shrink-0 border-t border-white/5 p-4 space-y-4">
+              <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">我的时长</p>
+
+              {/* Balance */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[12px] text-slate-500">本月剩余</span>
+                  <span className={`text-[12px] font-mono font-semibold ${creditsRemaining <= 10 ? "text-red-400" : creditsRemaining <= 30 ? "text-amber-400" : "text-emerald-400"}`}>
+                    {creditsRemaining} 分钟
+                  </span>
+                </div>
+                <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${creditsRemaining <= 10 ? "bg-red-500" : creditsRemaining <= 30 ? "bg-amber-500" : "bg-emerald-500"}`}
+                    style={{ width: `${Math.min(100, (creditsRemaining / 120) * 100)}%` }}
+                  />
                 </div>
               </div>
-            );
-          })()}
+
+              {/* Referral code */}
+              {referralCode && (
+                <div>
+                  <p className="text-[11px] text-slate-600 mb-1">我的邀请码</p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[13px] text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-lg tracking-widest">{referralCode}</span>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(referralCode); setInviteCopied(true); setTimeout(() => setInviteCopied(false), 1500); }}
+                      className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
+                    >{inviteCopied ? "已复制" : "复制"}</button>
+                  </div>
+                  <p className="text-[10px] text-slate-600 mt-1">好友使用后各得奖励</p>
+                </div>
+              )}
+
+              {/* Redemption code */}
+              <div>
+                <p className="text-[11px] text-slate-600 mb-1">兑换时长码</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="输入兑换码"
+                    value={redeemInput}
+                    onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
+                    className="flex-1 bg-white/5 border border-white/8 rounded-lg px-2 py-1.5 text-[12px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono min-w-0"
+                  />
+                  <button
+                    onClick={async () => {
+                      if (!redeemInput.trim()) return;
+                      setRedeemLoading(true); setRedeemMsg(null);
+                      const { data } = await supabase.auth.getSession();
+                      const token = data.session?.access_token;
+                      if (!token) { setRedeemMsg({ ok: false, text: "请先登录" }); setRedeemLoading(false); return; }
+                      const r = await fetch("/api/credits/redeem", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ code: redeemInput.trim() }) });
+                      const d = await r.json();
+                      if (r.ok) { setRedeemMsg({ ok: true, text: `+${d.minutesAdded} 分钟` }); setCreditsRemaining(d.minutesRemaining); setRedeemInput(""); }
+                      else { setRedeemMsg({ ok: false, text: d.error }); }
+                      setRedeemLoading(false);
+                    }}
+                    disabled={redeemLoading || !redeemInput.trim()}
+                    className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-[12px] px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                  >{redeemLoading ? "…" : "兑换"}</button>
+                </div>
+                {redeemMsg && <p className={`text-[11px] mt-1.5 ${redeemMsg.ok ? "text-emerald-400" : "text-red-400"}`}>{redeemMsg.text}</p>}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
