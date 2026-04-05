@@ -252,6 +252,9 @@ export default function Mimilang() {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
       setAuthLoading(false);
+    }).catch(() => {
+      // Safari 下网络失败或 Supabase 初始化异常时，确保不会永久转圈
+      setAuthLoading(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
@@ -835,7 +838,10 @@ export default function Mimilang() {
       // ── Whisper batch mode ──────────────────────────────────────────────────
       if (transcriptionEngineRef.current === "whisper") {
         const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus" : "audio/webm";
+          ? "audio/webm;codecs=opus"
+          : MediaRecorder.isTypeSupported("audio/mp4")
+          ? "audio/mp4"
+          : "";
         isWhisperActiveRef.current = true;
         setIsConnecting(false);
         setIsRecording(true);
@@ -902,7 +908,10 @@ export default function Mimilang() {
         }, 8000);
 
         const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-          ? "audio/webm;codecs=opus" : "audio/webm";
+          ? "audio/webm;codecs=opus"
+          : MediaRecorder.isTypeSupported("audio/mp4")
+          ? "audio/mp4"
+          : "";
         // Record from the noise-gated stream so Deepgram receives clean audio
         const mr = new MediaRecorder(processedStream, { mimeType });
         mediaRecorderRef.current = mr;
@@ -1154,7 +1163,22 @@ ${entries}${summary}${notes}</body></html>`;
 
   // ── Copy ─────────────────────────────────────────────────────────────────────
   const copyText = async (text: string, id?: number) => {
-    await navigator.clipboard.writeText(text);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // 旧版 Safari fallback：使用 execCommand
+        const el = document.createElement("textarea");
+        el.value = text;
+        el.style.position = "fixed";
+        el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+      }
+    } catch {}
     if (id !== undefined) { setCopiedId(id); setTimeout(() => setCopiedId(null), 1500); }
     else { setCopied(true); setTimeout(() => setCopied(false), 2000); }
   };
