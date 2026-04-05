@@ -90,19 +90,24 @@ export async function POST(req: NextRequest) {
   }
 
   const prompt = PROMPT(LANG_NAMES[language] ?? language, transcript);
+  const isLong = transcript.length >= 5000;
 
-  // Try Groq first (faster)
-  const groqResult = await callGroq(prompt);
-  if (groqResult?.trim()) {
-    const cleaned = groqResult.replace(/^```(?:markdown)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
-    return NextResponse.json({ summary: cleaned });
+  function clean(s: string) {
+    return s.replace(/^```(?:markdown)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
   }
 
-  // Fallback to Gemini
-  const geminiResult = await callGemini(prompt);
-  if (geminiResult?.trim()) {
-    const cleaned = geminiResult.replace(/^```(?:markdown)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
-    return NextResponse.json({ summary: cleaned });
+  if (isLong) {
+    // Long transcript: Gemini first (1M token context), Groq fallback
+    const geminiResult = await callGemini(prompt);
+    if (geminiResult?.trim()) return NextResponse.json({ summary: clean(geminiResult) });
+    const groqResult = await callGroq(prompt);
+    if (groqResult?.trim()) return NextResponse.json({ summary: clean(groqResult) });
+  } else {
+    // Short transcript: Groq first (faster), Gemini fallback
+    const groqResult = await callGroq(prompt);
+    if (groqResult?.trim()) return NextResponse.json({ summary: clean(groqResult) });
+    const geminiResult = await callGemini(prompt);
+    if (geminiResult?.trim()) return NextResponse.json({ summary: clean(geminiResult) });
   }
 
   return NextResponse.json({ summary: "笔记生成失败，请稍后重试。" });

@@ -209,6 +209,12 @@ export default function Mimilang() {
   const [feedbackSending,  setFeedbackSending]  = useState(false);
   const [feedbackMsg,      setFeedbackMsg]      = useState<{ ok: boolean; text: string } | null>(null);
 
+  // Q&A
+  const [showAsk,     setShowAsk]     = useState(false);
+  const [askQuestion, setAskQuestion] = useState("");
+  const [askAnswer,   setAskAnswer]   = useState("");
+  const [askLoading,  setAskLoading]  = useState(false);
+
   // Refs
   const wsRef             = useRef<WebSocket | null>(null);
   const mediaRecorderRef  = useRef<MediaRecorder | null>(null);
@@ -1206,6 +1212,30 @@ export default function Mimilang() {
     }
   };
 
+  // ── Q&A ──────────────────────────────────────────────────────────────────────
+  const askAboutLecture = async () => {
+    if (!askQuestion.trim() || !viewTranscripts.length) return;
+    setAskLoading(true);
+    setAskAnswer("");
+    try {
+      const res = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          transcript: viewTranscripts.map((t) => t.original).join("\n"),
+          question: askQuestion,
+          language: viewingSession?.sourceLang ?? sourceLang,
+        }),
+      });
+      const { answer } = await res.json();
+      setAskAnswer(answer ?? "无法回答，请重试。");
+    } catch {
+      setAskAnswer("出错了，请重试。");
+    } finally {
+      setAskLoading(false);
+    }
+  };
+
   // ── Export ───────────────────────────────────────────────────────────────────
   const exportSession = (format: "txt" | "md") => {
     const s = viewingSession ?? currentSession;
@@ -1971,6 +2001,14 @@ ${entries}${summary}${notes}</body></html>`;
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
             </svg>
           </button>
+
+          {/* 问答 */}
+          <button onClick={() => { setAskAnswer(""); setShowAsk(true); }} disabled={viewTranscripts.length === 0}
+            className="w-10 h-9 flex items-center justify-center rounded-lg text-slate-500 active:bg-white/5 transition-colors shrink-0 touch-manipulation disabled:opacity-20"
+            title="课堂问答"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </button>
         </div>
 
         {/* Main row */}
@@ -2155,6 +2193,13 @@ ${entries}${summary}${notes}</body></html>`;
                   {Math.floor(summaryCooldownLeft / 60)}:{String(summaryCooldownLeft % 60).padStart(2, "0")}
                 </span>
               )}
+            </button>
+            <button onClick={() => { setAskAnswer(""); setShowAsk(true); }} disabled={viewTranscripts.length === 0}
+              className="flex items-center gap-2 px-3 sm:px-5 py-2 bg-[var(--c-glass)] hover:bg-[var(--c-glass-hover)] border border-[var(--c-glass-border)] disabled:opacity-30 disabled:cursor-not-allowed text-slate-200 rounded-full text-sm font-semibold transition-all backdrop-blur-sm touch-manipulation"
+              title="课堂问答"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span className="hidden sm:inline">课堂问答</span>
             </button>
             </div>
           </div>
@@ -2588,6 +2633,49 @@ ${entries}${summary}${notes}</body></html>`;
                 className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-xl transition-colors"
               >
                 {feedbackSending ? "提交中…" : "提交"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Q&A Modal ── */}
+      {showAsk && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowAsk(false); }}
+        >
+          <div className="w-full max-w-lg bg-[var(--c-surface)] border border-white/8 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
+            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between shrink-0">
+              <p className="font-semibold text-slate-200">课堂问答</p>
+              <button onClick={() => setShowAsk(false)} className="text-slate-500 hover:text-slate-200 text-xl leading-none">×</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 min-h-[80px]">
+              {askLoading && (
+                <div className="flex justify-center">
+                  <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+              {!askLoading && askAnswer && (
+                <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">{askAnswer}</p>
+              )}
+              {!askLoading && !askAnswer && (
+                <p className="text-sm text-slate-600 text-center mt-4">输入问题，AI 将根据课堂内容作答</p>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-white/5 flex gap-3 shrink-0">
+              <input
+                value={askQuestion}
+                onChange={(e) => setAskQuestion(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askAboutLecture(); } }}
+                placeholder="例：今天课上提到了哪些重要概念？"
+                className="flex-1 bg-[var(--c-glass)] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-indigo-500/50"
+              />
+              <button onClick={askAboutLecture} disabled={!askQuestion.trim() || askLoading}
+                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all shrink-0"
+              >
+                {askLoading ? "…" : "提问"}
               </button>
             </div>
           </div>

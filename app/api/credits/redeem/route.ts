@@ -71,6 +71,18 @@ export async function POST(req: NextRequest) {
     if (referrer.user_id === user.id) {
       return NextResponse.json({ error: "不能使用自己的邀请码" }, { status: 400 });
     }
+
+    // Each user can only use ONE referral code ever
+    const { data: usedAnyReferral } = await db
+      .from("code_redemptions")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("code_type", "referral")
+      .single();
+    if (usedAnyReferral) {
+      return NextResponse.json({ error: "每人只能使用一次邀请码" }, { status: 400 });
+    }
+
     const REDEEMER_BONUS = 60;
     const REFERRER_BONUS = 30;
 
