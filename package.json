@@ -16,6 +16,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
+  "browserslist": ["> 0.5%", "last 2 versions", "not dead", "safari >= 14", "ios_saf >= 14"],
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
