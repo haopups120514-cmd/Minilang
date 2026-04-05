@@ -102,3 +102,19 @@ html, body { height: 100%; margin: 0; padding: 0; }
 
 /* ── Light mode: soften live sidebar interim translation border ───────────── */
 .light .border-indigo-500\/20 { border-color: rgba(79,70,229,0.25) !important; }
+
+/* ── iOS safe-area: footer 不被 Home Indicator 遮挡 ─────────────────────────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-footer-safe {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* ── 隐藏横向滚动条（控制栏） ────────────────────────────────────────────────── */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

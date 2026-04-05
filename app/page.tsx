@@ -1430,7 +1430,7 @@ ${entries}${summary}${notes}</body></html>`;
                           className={`w-full text-left px-4 py-3 transition-colors cursor-pointer ${isViewing ? "border-l-2 border-l-indigo-500" : "border-l-2 border-l-transparent"}`}
                           onClick={() => { setViewingSessionId(s.id); setShowSessionPanel(false); }}
                         >
-                          <div className="flex items-center gap-1 mb-0.5 min-w-0">
+                          <div className="flex items-center gap-1 mb-0.5 min-w-0 pr-6 md:pr-0">
                             {isActive && <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />}
                             {renamingSessionId === s.id ? (
                               <input
@@ -1477,7 +1477,7 @@ ${entries}${summary}${notes}</body></html>`;
                         {!isActive && (
                           <button
                             onClick={(e) => { e.stopPropagation(); deleteSession(s.id); }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-red-400 p-1"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-slate-600 hover:text-red-400 active:text-red-400 p-2.5 touch-manipulation"
                             title="删除此课程"
                           >
                             <svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor">
@@ -1527,7 +1527,7 @@ ${entries}${summary}${notes}</body></html>`;
                   )}
                   <button
                     onClick={(e) => { e.stopPropagation(); copyText(`${t.original}\n${t.translated}`, t.id); }}
-                    className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate-600 hover:text-slate-300"
+                    className="ml-auto opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-2 md:p-1 text-slate-600 hover:text-slate-300 active:text-slate-200 touch-manipulation"
                   >
                     {copiedId === t.id ? (
                       <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" className="text-green-400">
@@ -1704,44 +1704,73 @@ ${entries}${summary}${notes}</body></html>`;
 
       {/* ── Footer ── */}
       <div
-        className="shrink-0 border-t border-white/5 bg-[var(--c-surface)]"
+        className="shrink-0 border-t border-white/5 bg-[var(--c-surface)] mobile-footer-safe"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile secondary controls row */}
-        <div className="flex md:hidden items-center gap-3 px-4 py-2 border-b border-white/[0.04] overflow-x-auto">
+        <div className="flex md:hidden items-center gap-1 px-3 py-1.5 border-b border-white/[0.04] overflow-x-auto scrollbar-none">
+          {/* 清空 */}
           <button onClick={clearCurrentSession} disabled={viewTranscripts.length === 0 || isRecording}
-            className="text-xs text-slate-600 hover:text-slate-400 disabled:opacity-20 disabled:cursor-not-allowed transition-colors shrink-0"
-          >清空</button>
+            className="flex items-center gap-1 min-h-[36px] px-3 rounded-lg text-xs text-slate-500 disabled:opacity-20 disabled:cursor-not-allowed active:bg-white/5 touch-manipulation shrink-0"
+          >
+            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+            清空
+          </button>
+
+          {/* 导出 */}
           <div className="relative shrink-0">
             <button onClick={(e) => { e.stopPropagation(); setShowExport((v) => !v); }} disabled={viewTranscripts.length === 0}
-              className="text-xs text-slate-600 hover:text-slate-400 disabled:opacity-20 transition-colors"
-            >导出</button>
+              className="flex items-center gap-1 min-h-[36px] px-3 rounded-lg text-xs text-slate-500 disabled:opacity-20 active:bg-white/5 touch-manipulation"
+            >
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+              导出
+            </button>
             {showExport && (
-              <div className="absolute bottom-full mb-2 left-0 bg-[var(--c-card)] border border-white/10 rounded-lg py-1 shadow-xl w-28 z-10">
-                <button onClick={() => exportSession("txt")} className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5">导出 .txt</button>
-                <button onClick={() => exportSession("md")}  className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5">导出 .md</button>
-                <button onClick={printSession}               className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:bg-white/5">打印 / PDF</button>
+              <div className="absolute bottom-full mb-2 left-0 bg-[var(--c-card)] border border-white/10 rounded-xl py-1.5 shadow-xl w-32 z-10">
+                <button onClick={() => exportSession("txt")} className="w-full text-left px-4 py-2.5 text-xs text-slate-300 active:bg-white/5">导出 .txt</button>
+                <button onClick={() => exportSession("md")}  className="w-full text-left px-4 py-2.5 text-xs text-slate-300 active:bg-white/5">导出 .md</button>
+                <button onClick={printSession}               className="w-full text-left px-4 py-2.5 text-xs text-slate-300 active:bg-white/5">打印 / PDF</button>
                 {backupUrl && (
                   <a href={backupUrl} download={`recording-${viewingSession?.title ?? "backup"}.webm`}
-                    className="block px-3 py-1.5 text-xs text-emerald-400 hover:bg-white/5"
+                    className="block px-4 py-2.5 text-xs text-emerald-400 active:bg-white/5"
                     onClick={() => setShowExport(false)}
-                  >录音备份 .webm</a>
+                  >录音备份</a>
                 )}
               </div>
             )}
           </div>
+
+          {/* 设置 */}
           <button onClick={(e) => { e.stopPropagation(); setShowSettings((v) => !v); }}
-            className={`text-xs transition-colors shrink-0 ${showSettings ? "text-slate-300" : "text-slate-600 hover:text-slate-400"}`}
-          >⚙ 设置</button>
-          <span className="w-px h-3 bg-white/10 shrink-0" />
+            className={`flex items-center gap-1 min-h-[36px] px-3 rounded-lg text-xs transition-colors touch-manipulation shrink-0 ${showSettings ? "text-slate-300 bg-white/5" : "text-slate-500 active:bg-white/5"}`}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            设置
+          </button>
+
+          <span className="w-px h-4 bg-white/10 shrink-0 mx-1" />
+
+          {/* 字号 */}
           <button onClick={() => setFontSizeIdx((i) => Math.max(0, i - 1))} disabled={fontSizeIdx === 0}
-            className="w-6 h-6 flex items-center justify-center rounded text-[11px] font-bold text-slate-500 hover:text-slate-200 hover:bg-white/5 disabled:opacity-20 shrink-0"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[11px] font-bold text-slate-500 active:bg-white/5 disabled:opacity-20 shrink-0 touch-manipulation"
           >A</button>
           <button onClick={() => setFontSizeIdx((i) => Math.min(FONT_SIZES.length - 1, i + 1))} disabled={fontSizeIdx === FONT_SIZES.length - 1}
-            className="w-6 h-6 flex items-center justify-center rounded text-[13px] font-bold text-slate-500 hover:text-slate-200 hover:bg-white/5 disabled:opacity-20 shrink-0"
+            className="w-9 h-9 flex items-center justify-center rounded-lg text-[13px] font-bold text-slate-500 active:bg-white/5 disabled:opacity-20 shrink-0 touch-manipulation"
           >A</button>
-          <span className="w-px h-3 bg-white/10 shrink-0" />
-          <button onClick={() => setShowMobileNotes(true)} className="text-slate-600 hover:text-slate-300 transition-colors shrink-0 text-sm">📓</button>
+
+          <span className="w-px h-4 bg-white/10 shrink-0 mx-1" />
+
+          {/* 笔记 */}
+          <button onClick={() => setShowMobileNotes(true)}
+            className="flex items-center gap-1 min-h-[36px] px-3 rounded-lg text-slate-500 active:bg-white/5 transition-colors shrink-0 touch-manipulation"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <span className="text-xs">笔记</span>
+          </button>
         </div>
 
         {/* Main row */}
@@ -1846,7 +1875,7 @@ ${entries}${summary}${notes}</body></html>`;
             <div className="flex items-center gap-2">
             {!isRecording ? (
               <button onClick={startRecording} disabled={isConnecting || !isOnline} title="开始上课 (Space)"
-                className="btn-record flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 disabled:opacity-50 text-white rounded-full text-sm font-semibold transition-all border border-indigo-400/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_8px_24px_rgba(99,102,241,0.4)]"
+                className="btn-record flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 disabled:opacity-50 text-white rounded-full text-sm font-semibold transition-all border border-indigo-400/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_8px_24px_rgba(99,102,241,0.4)] touch-manipulation"
               >
                 <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
                 {isConnecting ? "连接中…" : "开始上课"}
@@ -1854,7 +1883,7 @@ ${entries}${summary}${notes}</body></html>`;
             ) : (
               <div className="flex items-center gap-2">
                 <button onClick={isPaused ? resumeRecording : pauseRecording} title={isPaused ? "继续上课" : "暂停"}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[var(--c-glass)] hover:bg-[var(--c-glass-hover)] border border-[var(--c-glass-border)] text-slate-300 rounded-full text-sm font-semibold transition-all backdrop-blur-sm"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-[var(--c-glass)] hover:bg-[var(--c-glass-hover)] border border-[var(--c-glass-border)] text-slate-300 rounded-full text-sm font-semibold transition-all backdrop-blur-sm touch-manipulation"
                 >
                   {isPaused ? (
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -1864,7 +1893,7 @@ ${entries}${summary}${notes}</body></html>`;
                   {isPaused ? "继续" : "暂停"}
                 </button>
                 <button onClick={() => stopRecording(true)} title="结束上课 (Space)"
-                  className="btn-stop flex items-center gap-2 px-5 py-2 bg-red-700 hover:bg-red-600 active:scale-95 text-white rounded-full text-sm font-semibold transition-all border border-red-400/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_24px_rgba(239,68,68,0.3)]"
+                  className="btn-stop flex items-center gap-2 px-5 py-2 bg-red-700 hover:bg-red-600 active:scale-95 text-white rounded-full text-sm font-semibold transition-all border border-red-400/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_8px_24px_rgba(239,68,68,0.3)] touch-manipulation"
                 >
                   <span className="w-2 h-2 rounded bg-white/80 shrink-0" />
                   结束上课
@@ -1872,8 +1901,13 @@ ${entries}${summary}${notes}</body></html>`;
               </div>
             )}
             <button onClick={generateSummary} disabled={viewTranscripts.length === 0 || isSummarizing}
-              className="flex items-center gap-2 px-5 py-2 bg-[var(--c-glass)] hover:bg-[var(--c-glass-hover)] border border-[var(--c-glass-border)] disabled:opacity-30 disabled:cursor-not-allowed text-slate-200 rounded-full text-sm font-semibold transition-all backdrop-blur-sm"
-            ><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>{isSummarizing ? "生成中…" : "课堂笔记"}</button>
+              className="flex items-center gap-2 px-3 sm:px-5 py-2 bg-[var(--c-glass)] hover:bg-[var(--c-glass-hover)] border border-[var(--c-glass-border)] disabled:opacity-30 disabled:cursor-not-allowed text-slate-200 rounded-full text-sm font-semibold transition-all backdrop-blur-sm touch-manipulation"
+              title="课堂笔记"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              <span className="hidden sm:inline">{isSummarizing ? "生成中…" : "课堂笔记"}</span>
+              {isSummarizing && <span className="sm:hidden">…</span>}
+            </button>
             </div>
             <span className="hidden md:block text-[10px] text-slate-700 font-mono">Space</span>
           </div>
