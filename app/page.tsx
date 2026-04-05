@@ -193,6 +193,14 @@ export default function Mimilang() {
   const [redeemLoading,    setRedeemLoading]    = useState(false);
   const [inviteCopied,     setInviteCopied]     = useState(false);
 
+  // Announcements & Feedback
+  const [announcements,    setAnnouncements]    = useState<{ id: string; title: string; content: string }[]>([]);
+  const [annIdx,           setAnnIdx]           = useState(0);
+  const [showFeedback,     setShowFeedback]     = useState(false);
+  const [feedbackText,     setFeedbackText]     = useState("");
+  const [feedbackSending,  setFeedbackSending]  = useState(false);
+  const [feedbackMsg,      setFeedbackMsg]      = useState<{ ok: boolean; text: string } | null>(null);
+
   // Refs
   const wsRef             = useRef<WebSocket | null>(null);
   const mediaRecorderRef  = useRef<MediaRecorder | null>(null);
@@ -309,6 +317,18 @@ export default function Mimilang() {
     prevIsRecordingRef.current = isRecording;
   }, [isRecording]);
 
+  // ── Fetch unread announcements when user logs in ──────────────────────────
+  useEffect(() => {
+    if (!user) { setAnnouncements([]); setAnnIdx(0); return; }
+    supabase.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token;
+      if (!token) return;
+      fetch("/api/announcements", { headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => r.json())
+        .then((d) => { if (d.announcements?.length) { setAnnouncements(d.announcements); setAnnIdx(0); } })
+        .catch(() => {});
+    });
+  }, [user]);
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -1789,6 +1809,12 @@ ${entries}${summary}${notes}</body></html>`;
                 </div>
                 {redeemMsg && <p className={`text-[11px] mt-1.5 ${redeemMsg.ok ? "text-emerald-400" : "text-red-400"}`}>{redeemMsg.text}</p>}
               </div>
+              <button
+                onClick={() => setShowFeedback(true)}
+                className="w-full mt-2 text-[11px] text-slate-600 hover:text-slate-400 border border-white/5 hover:border-white/10 rounded-lg py-1.5 transition-colors"
+              >
+                ✉️ 反馈 / 报告问题
+              </button>
             </div>
           )}
         </div>
@@ -2289,6 +2315,16 @@ ${entries}${summary}${notes}</body></html>`;
                 )}
               </div>
             </div>
+
+            {/* Feedback button */}
+            <div className="pt-4 border-t border-white/5 mt-2">
+              <button
+                onClick={() => { setShowFeedback(true); }}
+                className="w-full text-[13px] text-slate-400 hover:text-slate-200 border border-white/8 hover:border-white/15 rounded-xl py-2.5 transition-colors"
+              >
+                ✉️ 提交反馈 / 报告问题
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -2339,6 +2375,91 @@ ${entries}${summary}${notes}</body></html>`;
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Announcement popup ── */}
+      {announcements.length > 0 && annIdx < announcements.length && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm bg-[#161b22] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+              <p className="text-sm font-semibold text-white">📢 {announcements[annIdx].title}</p>
+              <span className="text-[11px] text-slate-600">{annIdx + 1}/{announcements.length}</span>
+            </div>
+            <div className="px-5 py-4">
+              <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{announcements[annIdx].content}</p>
+            </div>
+            <div className="px-5 py-4 border-t border-white/5 flex justify-end gap-2">
+              <button
+                onClick={async () => {
+                  const { data } = await supabase.auth.getSession();
+                  const token = data.session?.access_token;
+                  if (token) {
+                    fetch("/api/announcements", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ id: announcements[annIdx].id }),
+                    }).catch(() => {});
+                  }
+                  if (annIdx + 1 < announcements.length) setAnnIdx(annIdx + 1);
+                  else setAnnouncements([]);
+                }}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors"
+              >
+                {annIdx + 1 < announcements.length ? "下一条" : "知道了"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Feedback modal ── */}
+      {showFeedback && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-sm bg-[#161b22] border border-white/10 rounded-2xl shadow-2xl">
+            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+              <p className="text-sm font-semibold text-white">✉️ 提交反馈</p>
+              <button onClick={() => { setShowFeedback(false); setFeedbackText(""); setFeedbackMsg(null); }}
+                className="text-slate-500 hover:text-slate-200 text-xl leading-none">×</button>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              <textarea
+                placeholder="请描述你遇到的问题或建议…"
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                rows={5}
+                className="w-full bg-[#0d1117] border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 resize-none"
+              />
+              {feedbackMsg && (
+                <p className={`text-xs ${feedbackMsg.ok ? "text-emerald-400" : "text-red-400"}`}>{feedbackMsg.text}</p>
+              )}
+              <button
+                disabled={feedbackSending || !feedbackText.trim()}
+                onClick={async () => {
+                  setFeedbackSending(true); setFeedbackMsg(null);
+                  const { data } = await supabase.auth.getSession();
+                  const token = data.session?.access_token;
+                  if (!token) { setFeedbackMsg({ ok: false, text: "请先登录" }); setFeedbackSending(false); return; }
+                  const r = await fetch("/api/feedback", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ content: feedbackText.trim() }),
+                  });
+                  if (r.ok) {
+                    setFeedbackMsg({ ok: true, text: "已提交，感谢反馈！" });
+                    setFeedbackText("");
+                    setTimeout(() => { setShowFeedback(false); setFeedbackMsg(null); }, 1500);
+                  } else {
+                    setFeedbackMsg({ ok: false, text: "提交失败，请重试" });
+                  }
+                  setFeedbackSending(false);
+                }}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-xl transition-colors"
+              >
+                {feedbackSending ? "提交中…" : "提交"}
+              </button>
+            </div>
           </div>
         </div>
       )}
