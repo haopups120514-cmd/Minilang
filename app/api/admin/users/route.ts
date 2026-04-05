@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
     return {
       id:           u.id,
       email:        u.email,
+      displayName:  (c?.display_name as string) ?? "",
       createdAt:    u.created_at,
       lastSignIn:   u.last_sign_in_at,
       referralCode: c?.referral_code,

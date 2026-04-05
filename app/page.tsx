@@ -193,6 +193,12 @@ export default function Mimilang() {
   const [redeemLoading,    setRedeemLoading]    = useState(false);
   const [inviteCopied,     setInviteCopied]     = useState(false);
 
+  // Username
+  const [displayName,      setDisplayName]      = useState("");
+  const [editingName,      setEditingName]      = useState("");
+  const [nameSaving,       setNameSaving]       = useState(false);
+  const [nameMsg,          setNameMsg]          = useState<{ ok: boolean; text: string } | null>(null);
+
   // Announcements & Feedback
   const [announcements,    setAnnouncements]    = useState<{ id: string; title: string; content: string }[]>([]);
   const [annIdx,           setAnnIdx]           = useState(0);
@@ -291,6 +297,7 @@ export default function Mimilang() {
         .then((d) => {
           if (d.minutesRemaining !== undefined) setCreditsRemaining(d.minutesRemaining);
           if (d.referralCode) setReferralCode(d.referralCode);
+          if (d.displayName !== undefined) { setDisplayName(d.displayName); setEditingName(d.displayName); }
         }).catch(() => {});
     });
   }, [user]);
@@ -1907,6 +1914,18 @@ ${entries}${summary}${notes}</body></html>`;
             设置
           </button>
 
+          {/* 反馈 */}
+          {user && (
+            <button onClick={() => setShowFeedback(true)}
+              className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 active:bg-white/5 touch-manipulation shrink-0"
+              title="提交反馈"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </button>
+          )}
+
           <span className="w-px h-4 bg-white/10 shrink-0 mx-0.5" />
 
           {/* 字号 */}
@@ -1974,6 +1993,45 @@ ${entries}${summary}${notes}</body></html>`;
               {showSettings && (
                 <div className="absolute bottom-full mb-2 left-0 bg-[var(--c-card)] border border-white/10 rounded-xl p-3 shadow-xl w-64 z-10" onClick={(e) => e.stopPropagation()}>
                   <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-3">设置</p>
+
+                  {/* 用户名 */}
+                  {user && (
+                    <div className="mb-3 pb-3 border-b border-white/5">
+                      <p className="text-[10px] text-slate-500 mb-1.5">用户名</p>
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value.slice(0, 30))}
+                          placeholder="设置昵称"
+                          className="flex-1 bg-white/5 border border-white/8 rounded-lg px-2 py-1.5 text-[12px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 min-w-0"
+                        />
+                        <button
+                          disabled={nameSaving || editingName.trim() === displayName}
+                          onClick={async () => {
+                            if (!editingName.trim()) return;
+                            setNameSaving(true); setNameMsg(null);
+                            const { data } = await supabase.auth.getSession();
+                            const token = data.session?.access_token;
+                            if (!token) { setNameSaving(false); return; }
+                            const r = await fetch("/api/profile", {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                              body: JSON.stringify({ displayName: editingName.trim() }),
+                            });
+                            const d = await r.json();
+                            if (r.ok) { setDisplayName(d.displayName); setNameMsg({ ok: true, text: "✓" }); }
+                            else { setNameMsg({ ok: false, text: "失败" }); }
+                            setNameSaving(false);
+                            setTimeout(() => setNameMsg(null), 2000);
+                          }}
+                          className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-[11px] px-2 py-1.5 rounded-lg transition-colors shrink-0"
+                        >
+                          {nameSaving ? "…" : nameMsg?.ok ? "✓" : "保存"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Transcription engine */}
                   <div className="flex items-center justify-between mb-3">
@@ -2164,6 +2222,46 @@ ${entries}${summary}${notes}</body></html>`;
               <span className="text-[15px] font-semibold text-slate-200">设置</span>
               <button onClick={() => setShowSettings(false)} className="text-slate-500 text-xl p-1 leading-none active:text-slate-200">×</button>
             </div>
+
+            {/* 用户名 */}
+            {user && (
+              <div className="mb-5 pb-5 border-b border-white/5">
+                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-2">用户名</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editingName}
+                    onChange={(e) => setEditingName(e.target.value.slice(0, 30))}
+                    placeholder="设置昵称（最多30字）"
+                    className="flex-1 bg-white/5 border border-white/8 rounded-lg px-3 py-2 text-[13px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                  />
+                  <button
+                    disabled={nameSaving || editingName.trim() === displayName}
+                    onClick={async () => {
+                      if (!editingName.trim()) return;
+                      setNameSaving(true); setNameMsg(null);
+                      const { data } = await supabase.auth.getSession();
+                      const token = data.session?.access_token;
+                      if (!token) { setNameSaving(false); return; }
+                      const r = await fetch("/api/profile", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ displayName: editingName.trim() }),
+                      });
+                      const d = await r.json();
+                      if (r.ok) { setDisplayName(d.displayName); setNameMsg({ ok: true, text: "已保存" }); }
+                      else { setNameMsg({ ok: false, text: d.error ?? "保存失败" }); }
+                      setNameSaving(false);
+                      setTimeout(() => setNameMsg(null), 2000);
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-[12px] px-3 py-2 rounded-lg transition-colors shrink-0"
+                  >
+                    {nameSaving ? "…" : "保存"}
+                  </button>
+                </div>
+                {nameMsg && <p className={`text-[11px] mt-1.5 ${nameMsg.ok ? "text-emerald-400" : "text-red-400"}`}>{nameMsg.text}</p>}
+              </div>
+            )}
 
             {/* 识别引擎 */}
             <div className="flex items-center justify-between mb-5">

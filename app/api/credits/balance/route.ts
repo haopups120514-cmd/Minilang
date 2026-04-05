@@ -75,6 +75,7 @@ export async function GET(req: NextRequest) {
       baseRemaining: 120,
       bonusMinutes: 0,
       referralCode: created.referral_code,
+      displayName: "",
     });
   }
 
@@ -97,5 +98,6 @@ export async function GET(req: NextRequest) {
     baseRemaining: Math.max(0, 120 - row.base_used_month),
     bonusMinutes: row.bonus_minutes,
     referralCode: row.referral_code,
+    displayName: (row as Record<string, unknown>).display_name ?? "",
   });
 }

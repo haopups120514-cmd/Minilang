@@ -8,7 +8,7 @@ interface RedemptionCode {
   expires_at: string | null; note: string | null; created_at: string;
 }
 interface AdminUser {
-  id: string; email: string; createdAt: string; lastSignIn: string | null;
+  id: string; email: string; displayName: string; createdAt: string; lastSignIn: string | null;
   referralCode: string; remaining: number; isBanned: boolean;
 }
 interface Stats {
@@ -161,7 +161,10 @@ function UsersTab({ secret }: { secret: string }) {
             {filtered.map(u => (
               <div key={u.id} className={`px-5 py-3 flex items-center gap-3 ${u.isBanned ? "opacity-50" : ""}`}>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-white truncate">{u.email}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-white truncate">{u.email}</p>
+                    {u.displayName && <span className="text-[11px] text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded shrink-0">{u.displayName}</span>}
+                  </div>
                   <p className="text-[11px] text-slate-500">
                     注册 {new Date(u.createdAt).toLocaleDateString("zh-CN")}
                     {u.lastSignIn && ` · 最近登录 ${new Date(u.lastSignIn).toLocaleDateString("zh-CN")}`}
