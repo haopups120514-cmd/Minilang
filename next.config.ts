@@ -9,9 +9,6 @@ const nextConfig: NextConfig = {
     "@supabase/storage-js",
     "@supabase/functions-js",
   ],
-  experimental: {
-    browsersListForSwc: true,
-  },
 };
 
 export default nextConfig;
