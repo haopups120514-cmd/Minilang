@@ -1286,8 +1286,7 @@ ${entries}${summary}${notes}</body></html>`;
                   : "text-slate-500 hover:text-slate-300"
               }`}
             >
-              {LANGUAGES[lang].flag}
-              <span className="hidden min-[380px]:inline">{LANGUAGES[lang].nativeLabel}</span>
+              {LANGUAGES[lang].flag} {LANGUAGES[lang].nativeLabel}
             </button>
           ))}
           <span className="text-slate-600 text-xs px-1">→ 中文</span>
@@ -1667,41 +1666,52 @@ ${entries}${summary}${notes}</body></html>`;
         </div>
       </div>
 
-      {/* ── Live strip (mobile only, hidden on md+) ── */}
-      {isViewingCurrent && isRecording && (
-        <div className="lg:hidden shrink-0 border-t border-indigo-500/20 bg-[var(--c-bg-deep)] px-5 py-3 min-h-[64px] max-h-40">
-          <div className="flex items-center gap-2 mb-1.5">
-            {isPaused ? (
-              <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">已暂停</span>
-            ) : (
-              <>
-                <span className="relative flex h-2 w-2 shrink-0">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isWhisperProcessing ? "bg-purple-400" : "bg-red-400"}`} />
-                  <span className={`relative inline-flex rounded-full h-2 w-2 ${isWhisperProcessing ? "bg-purple-500" : "bg-red-500"}`} />
-                </span>
-                <span className={`text-[10px] font-mono uppercase tracking-wider ${isWhisperProcessing ? "text-purple-400" : "text-red-400"}`}>
-                  {transcriptionEngine === "whisper" ? (isWhisperProcessing ? "识别中…" : "录音中") : "实时"}
-                </span>
-              </>
-            )}
-          </div>
-          {isPaused ? (
-            <p className="text-sm text-slate-600 italic">点击"继续"恢复录音</p>
-          ) : transcriptionEngine === "whisper" ? (
-            <p className="text-sm text-slate-600 italic">
-              {isWhisperProcessing ? "正在识别本段语音…" : "每8秒自动识别一次"}
-            </p>
-          ) : interimText ? (
-            <>
-              <p className={`${textCls} ${leading} text-slate-300`}>{interimText}</p>
-              <div className="mt-1 pl-3 border-l-2 border-indigo-500/30">
-                <p className={`${textCls} ${leading} text-indigo-300/70`}>
-                  {interimTrans || <span className="text-slate-600 italic">翻译中…</span>}
-                </p>
-              </div>
-            </>
+      {/* ── Live strip (mobile only, always visible when viewing current session) ── */}
+      {isViewingCurrent && (
+        <div className="lg:hidden shrink-0 border-t border-indigo-500/20 bg-[var(--c-bg-deep)] px-5 py-3 min-h-[56px] max-h-40">
+          {!isRecording ? (
+            /* 待机状态 */
+            <div className="flex items-center gap-2 h-full">
+              <span className="w-2 h-2 rounded-full bg-slate-700 shrink-0" />
+              <p className="text-sm text-slate-600 italic">点击「开始上课」开始实时转写</p>
+            </div>
           ) : (
-            <p className="text-sm text-slate-600 italic">等待语音输入…</p>
+            /* 录音中 */
+            <>
+              <div className="flex items-center gap-2 mb-1.5">
+                {isPaused ? (
+                  <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">已暂停</span>
+                ) : (
+                  <>
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isWhisperProcessing ? "bg-purple-400" : "bg-red-400"}`} />
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${isWhisperProcessing ? "bg-purple-500" : "bg-red-500"}`} />
+                    </span>
+                    <span className={`text-[10px] font-mono uppercase tracking-wider ${isWhisperProcessing ? "text-purple-400" : "text-red-400"}`}>
+                      {transcriptionEngine === "whisper" ? (isWhisperProcessing ? "识别中…" : "录音中") : "实时"}
+                    </span>
+                  </>
+                )}
+              </div>
+              {isPaused ? (
+                <p className="text-sm text-slate-600 italic">点击「继续」恢复录音</p>
+              ) : transcriptionEngine === "whisper" ? (
+                <p className="text-sm text-slate-600 italic">
+                  {isWhisperProcessing ? "正在识别本段语音…" : "每8秒自动识别一次"}
+                </p>
+              ) : interimText ? (
+                <>
+                  <p className={`${textCls} ${leading} text-slate-300`}>{interimText}</p>
+                  <div className="mt-1 pl-3 border-l-2 border-indigo-500/30">
+                    <p className={`${textCls} ${leading} text-indigo-300/70`}>
+                      {interimTrans || <span className="text-slate-600 italic">翻译中…</span>}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-slate-600 italic">等待语音输入…</p>
+              )}
+            </>
           )}
         </div>
       )}
@@ -1964,6 +1974,74 @@ ${entries}${summary}${notes}</body></html>`;
               placeholder="在这里记录要点、疑问…"
               className="flex-1 bg-[var(--c-bg)] border border-white/5 rounded-lg p-3 text-[13px] text-slate-300 placeholder-slate-700 resize-none focus:outline-none focus:border-indigo-500/50 leading-relaxed min-h-[120px]"
             />
+          </div>
+        </div>
+      )}
+
+      {/* ── Mobile Settings Sheet ── */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setShowSettings(false)}>
+          <div
+            className="absolute inset-x-0 bottom-0 bg-[var(--c-surface)] border-t border-white/8 rounded-t-2xl px-5 py-4 max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 拖拽把手 */}
+            <div className="w-10 h-1 bg-white/15 rounded-full mx-auto mb-4" />
+
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-[15px] font-semibold text-slate-200">设置</span>
+              <button onClick={() => setShowSettings(false)} className="text-slate-500 text-xl p-1 leading-none active:text-slate-200">×</button>
+            </div>
+
+            {/* 识别引擎 */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="text-[13px] text-slate-300 font-medium">识别引擎</p>
+                <p className="text-[11px] text-slate-600 mt-0.5">
+                  {transcriptionEngine === "deepgram" ? "低延迟，实时显示" : "高准确率，句末输出"}
+                </p>
+              </div>
+              <div className="flex gap-1.5 shrink-0 ml-4">
+                <button disabled={isRecording} onClick={() => setTranscriptionEngine("deepgram")}
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors disabled:opacity-40 touch-manipulation ${transcriptionEngine === "deepgram" ? "bg-indigo-600 text-white" : "text-slate-500 bg-white/5 active:bg-white/10"}`}
+                >实时</button>
+                <button disabled={isRecording} onClick={() => setTranscriptionEngine("whisper")}
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors disabled:opacity-40 touch-manipulation ${transcriptionEngine === "whisper" ? "bg-purple-600/80 text-white" : "text-slate-500 bg-white/5 active:bg-white/10"}`}
+                >精准</button>
+              </div>
+            </div>
+
+            {/* AI 增强 */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="text-[13px] text-slate-300 font-medium">AI 增强</p>
+                <p className="text-[11px] text-slate-600 mt-0.5">识别纠错 + 翻译优化</p>
+              </div>
+              <button onClick={() => setCorrectionEnabled((v) => !v)}
+                className={`relative w-11 h-6 rounded-full transition-colors flex items-center shrink-0 ml-4 touch-manipulation ${correctionEnabled ? "bg-indigo-600" : "bg-slate-700"}`}
+              >
+                <span className={`absolute w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${correctionEnabled ? "left-[22px]" : "left-[2px]"}`} />
+              </button>
+            </div>
+
+            {/* 麦克风 */}
+            <div className="pt-4 border-t border-white/5">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-3">麦克风</p>
+              <button disabled={isRecording}
+                onClick={() => { setSelectedDeviceId(""); try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, translationMode, selectedDeviceId: "" })); } catch {} }}
+                className={`w-full text-left px-3 py-2.5 rounded-lg text-[13px] transition-colors mb-1 disabled:opacity-40 touch-manipulation ${!selectedDeviceId ? "text-emerald-400 bg-emerald-500/10" : "text-slate-500 active:bg-white/5"}`}
+              >系统默认</button>
+              {audioDevices.map((d) => (
+                <button key={d.deviceId} disabled={isRecording}
+                  onClick={() => { setSelectedDeviceId(d.deviceId); try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, translationMode, selectedDeviceId: d.deviceId })); } catch {} }}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-[13px] truncate transition-colors mb-1 disabled:opacity-40 touch-manipulation ${selectedDeviceId === d.deviceId ? "text-emerald-400 bg-emerald-500/10" : "text-slate-500 active:bg-white/5"}`}
+                  title={d.label || d.deviceId}
+                >{d.label || `麦克风 ${d.deviceId.slice(0, 8)}…`}</button>
+              ))}
+              {audioDevices.length === 0 && (
+                <p className="px-3 text-[12px] text-slate-700 italic">开始上课后显示</p>
+              )}
+            </div>
           </div>
         </div>
       )}
