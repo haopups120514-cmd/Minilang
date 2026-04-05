@@ -298,7 +298,6 @@ export default function Mimilang() {
           setViewingSessionId(last.id);
           currentSidRef.current = last.id;
           setSourceLang(last.sourceLang);
-          setTargetLang(last.targetLang);
           const allIds = saved.flatMap((s) => s.transcripts.map((t) => t.id));
           if (allIds.length > 0) entryIdRef.current = Math.max(...allIds) + 1;
         }
