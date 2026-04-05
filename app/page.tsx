@@ -185,6 +185,14 @@ export default function Mimilang() {
   const [copiedId,      setCopiedId]      = useState<number | null>(null);
   const [userScrolledUp, setUserScrolledUp] = useState(false);
 
+  // Credits / time quota
+  const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null);
+  const [referralCode,     setReferralCode]     = useState("");
+  const [redeemInput,      setRedeemInput]      = useState("");
+  const [redeemMsg,        setRedeemMsg]        = useState<{ ok: boolean; text: string } | null>(null);
+  const [redeemLoading,    setRedeemLoading]    = useState(false);
+  const [inviteCopied,     setInviteCopied]     = useState(false);
+
   // Refs
   const wsRef             = useRef<WebSocket | null>(null);
   const mediaRecorderRef  = useRef<MediaRecorder | null>(null);
@@ -264,7 +272,44 @@ export default function Mimilang() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Network ─────────────────────────────────────────────────────────────────
+  // ── Credits: load balance on login ───────────────────────────────────────────
+  useEffect(() => {
+    if (!user) { setCreditsRemaining(null); setReferralCode(""); return; }
+    supabase.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token;
+      if (!token) return;
+      fetch("/api/credits/balance", { headers: { Authorization: `Bearer ${token}` } })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.minutesRemaining !== undefined) setCreditsRemaining(d.minutesRemaining);
+          if (d.referralCode) setReferralCode(d.referralCode);
+        }).catch(() => {});
+    });
+  }, [user]);
+
+  // ── Credits: deduct after recording ends ─────────────────────────────────────
+  const prevIsRecordingRef = useRef(false);
+  useEffect(() => {
+    if (prevIsRecordingRef.current && !isRecording) {
+      const mins = Math.ceil(elapsedSecsRef.current / 60);
+      if (mins > 0) {
+        supabase.auth.getSession().then(({ data }) => {
+          const token = data.session?.access_token;
+          if (!token) return;
+          fetch("/api/credits/use", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ minutes: mins }),
+          }).then((r) => r.json()).then((d) => {
+            if (d.minutesRemaining !== undefined) setCreditsRemaining(d.minutesRemaining);
+          }).catch(() => {});
+        });
+      }
+    }
+    prevIsRecordingRef.current = isRecording;
+  }, [isRecording]);
+
+
   useEffect(() => {
     setIsOnline(navigator.onLine);
     const on  = () => setIsOnline(true);
@@ -798,6 +843,11 @@ export default function Mimilang() {
   // ── Start recording ──────────────────────────────────────────────────────────
   const startRecording = async () => {
     setError("");
+    // ── Credits check ────────────────────────────────────────────────────────
+    if (creditsRemaining !== null && creditsRemaining <= 0) {
+      setError("本月录音时长已用完，请在设置中兑换时长码或分享邀请码获取奖励");
+      return;
+    }
     setIsConnecting(true);
     intentionalRef.current = false;
 
@@ -2093,6 +2143,107 @@ ${entries}${summary}${notes}</body></html>`;
               {audioDevices.length === 0 && (
                 <p className="px-3 text-[12px] text-slate-700 italic">开始上课后显示</p>
               )}
+            </div>
+
+            {/* ── 时长 & 邀请 ── */}
+            <div className="pt-4 border-t border-white/5 mt-2">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-3">我的时长</p>
+
+              {/* Balance */}
+              {creditsRemaining !== null ? (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[13px] text-slate-300">本月剩余</span>
+                    <span className={`text-[13px] font-mono font-semibold ${creditsRemaining <= 10 ? "text-red-400" : creditsRemaining <= 30 ? "text-amber-400" : "text-emerald-400"}`}>
+                      {creditsRemaining} 分钟
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${creditsRemaining <= 10 ? "bg-red-500" : creditsRemaining <= 30 ? "bg-amber-500" : "bg-emerald-500"}`}
+                      style={{ width: `${Math.min(100, (creditsRemaining / 120) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-600 mt-1">每月重置 120 分钟</p>
+                </div>
+              ) : (
+                <div className="h-8 flex items-center mb-4">
+                  <div className="w-4 h-4 border-2 border-slate-600 border-t-transparent rounded-full animate-spin mr-2" />
+                  <span className="text-[12px] text-slate-600">加载中…</span>
+                </div>
+              )}
+
+              {/* Invite code */}
+              {referralCode && (
+                <div className="mb-4">
+                  <p className="text-[11px] text-slate-500 mb-1.5">我的邀请码
+                    <span className="text-slate-700 ml-1">（好友填写后，对方+60分钟，你+30分钟）</span>
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="flex-1 font-mono text-sm text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-3 py-2 tracking-widest">
+                      {referralCode}
+                    </span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(referralCode).then(() => {
+                          setInviteCopied(true);
+                          setTimeout(() => setInviteCopied(false), 2000);
+                        }).catch(() => {});
+                      }}
+                      className="px-3 py-2 rounded-lg text-[12px] bg-white/5 active:bg-white/10 text-slate-400 touch-manipulation shrink-0"
+                    >
+                      {inviteCopied ? "✓ 已复制" : "复制"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Redeem code */}
+              <div>
+                <p className="text-[11px] text-slate-500 mb-1.5">兑换时长码</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="输入邀请码或兑换码"
+                    value={redeemInput}
+                    onChange={(e) => { setRedeemInput(e.target.value.toUpperCase()); setRedeemMsg(null); }}
+                    maxLength={20}
+                    className="flex-1 bg-[var(--c-bg)] border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono tracking-wider"
+                  />
+                  <button
+                    disabled={redeemLoading || !redeemInput.trim()}
+                    onClick={async () => {
+                      setRedeemLoading(true);
+                      setRedeemMsg(null);
+                      const { data } = await supabase.auth.getSession();
+                      const token = data.session?.access_token;
+                      if (!token) { setRedeemMsg({ ok: false, text: "请先登录" }); setRedeemLoading(false); return; }
+                      const res = await fetch("/api/credits/redeem", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ code: redeemInput.trim() }),
+                      });
+                      const d = await res.json();
+                      if (res.ok) {
+                        setRedeemMsg({ ok: true, text: d.message });
+                        setCreditsRemaining(d.minutesRemaining);
+                        setRedeemInput("");
+                      } else {
+                        setRedeemMsg({ ok: false, text: d.error || "兑换失败" });
+                      }
+                      setRedeemLoading(false);
+                    }}
+                    className="px-3 py-2 rounded-lg text-[12px] bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white touch-manipulation shrink-0"
+                  >
+                    {redeemLoading ? "…" : "兑换"}
+                  </button>
+                </div>
+                {redeemMsg && (
+                  <p className={`text-[12px] mt-1.5 ${redeemMsg.ok ? "text-emerald-400" : "text-red-400"}`}>
+                    {redeemMsg.text}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
