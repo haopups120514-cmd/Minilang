@@ -43,10 +43,10 @@ const LANGUAGES: Record<LangKey, {
 const ALL_LANGS: LangKey[] = ["ja", "en", "zh"];
 
 const FONT_SIZES = [
-  { cls: "text-sm",     leading: "leading-relaxed" },
-  { cls: "text-[15px]", leading: "leading-relaxed" },
-  { cls: "text-lg",     leading: "leading-loose"   },
-  { cls: "text-xl",     leading: "leading-loose"   },
+  { cls: "text-xs sm:text-sm",      leading: "leading-relaxed" },  // 小
+  { cls: "text-sm sm:text-[15px]",  leading: "leading-relaxed" },  // 默认
+  { cls: "text-[15px] sm:text-lg",  leading: "leading-loose"   },  // 大
+  { cls: "text-base sm:text-xl",    leading: "leading-loose"   },  // 超大
 ];
 
 const MAX_RECONNECTS = 3;
@@ -1286,7 +1286,8 @@ ${entries}${summary}${notes}</body></html>`;
                   : "text-slate-500 hover:text-slate-300"
               }`}
             >
-              {LANGUAGES[lang].flag} {LANGUAGES[lang].nativeLabel}
+              {LANGUAGES[lang].flag}
+              <span className="hidden min-[380px]:inline">{LANGUAGES[lang].nativeLabel}</span>
             </button>
           ))}
           <span className="text-slate-600 text-xs px-1">→ 中文</span>
@@ -1330,9 +1331,12 @@ ${entries}${summary}${notes}</body></html>`;
           <button
             onClick={() => supabase.auth.signOut()}
             title={user.email}
-            className="text-xs text-slate-600 hover:text-slate-300 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors shrink-0"
+            className="text-xs text-slate-600 hover:text-slate-300 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors shrink-0 touch-manipulation"
           >
-            退出
+            <span className="hidden min-[380px]:inline">退出</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="min-[380px]:hidden">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
           </button>
         </div>
       </header>
@@ -1495,7 +1499,7 @@ ${entries}${summary}${notes}</body></html>`;
         {/* ── History panel (scrollable, user can freely browse) ── */}
         <div
           ref={historyScrollRef}
-          className="flex-1 overflow-y-auto p-5 space-y-5 min-w-0 relative md:max-w-[calc(100%-288px)]"
+          className="flex-1 overflow-y-auto p-4 sm:p-5 xl:px-16 2xl:px-28 space-y-5 min-w-0 relative lg:max-w-[calc(100%-288px)]"
           onScroll={() => {
             const el = historyScrollRef.current;
             if (!el) return;
@@ -1578,7 +1582,7 @@ ${entries}${summary}${notes}</body></html>`;
         </div>
 
         {/* ── Right sidebar (md+ only) ── */}
-        <div className="hidden md:flex flex-col w-72 shrink-0 border-l border-white/5 bg-[var(--c-bg)] overflow-hidden">
+        <div className="hidden lg:flex flex-col w-72 shrink-0 border-l border-white/5 bg-[var(--c-bg)] overflow-hidden">
 
           {/* Live section */}
           <div className="shrink-0 border-b border-white/5 p-4 min-h-[120px]">
@@ -1665,7 +1669,7 @@ ${entries}${summary}${notes}</body></html>`;
 
       {/* ── Live strip (mobile only, hidden on md+) ── */}
       {isViewingCurrent && isRecording && (
-        <div className="md:hidden shrink-0 border-t border-indigo-500/20 bg-[var(--c-bg-deep)] px-5 py-3 min-h-[64px] max-h-40">
+        <div className="lg:hidden shrink-0 border-t border-indigo-500/20 bg-[var(--c-bg-deep)] px-5 py-3 min-h-[64px] max-h-40">
           <div className="flex items-center gap-2 mb-1.5">
             {isPaused ? (
               <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">已暂停</span>
@@ -1708,7 +1712,7 @@ ${entries}${summary}${notes}</body></html>`;
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile secondary controls row */}
-        <div className="flex md:hidden items-center gap-1 px-3 py-1.5 border-b border-white/[0.04] overflow-x-auto scrollbar-none">
+        <div className="flex lg:hidden items-center gap-1 px-3 py-1.5 border-b border-white/[0.04] overflow-x-auto scrollbar-none">
           {/* 清空 */}
           <button onClick={clearCurrentSession} disabled={viewTranscripts.length === 0 || isRecording}
             className="flex items-center gap-1 min-h-[36px] px-3 rounded-lg text-xs text-slate-500 disabled:opacity-20 disabled:cursor-not-allowed active:bg-white/5 touch-manipulation shrink-0"
@@ -1776,7 +1780,7 @@ ${entries}${summary}${notes}</body></html>`;
         {/* Main row */}
         <div className="flex items-center justify-between px-5 py-3">
           {/* Left: secondary controls (desktop only) */}
-          <div className="hidden md:flex items-center gap-3 flex-1">
+          <div className="hidden lg:flex items-center gap-3 flex-1">
             <button onClick={clearCurrentSession} disabled={viewTranscripts.length === 0 || isRecording}
               className="text-xs text-slate-600 hover:text-slate-400 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
             >清空</button>
@@ -1868,7 +1872,7 @@ ${entries}${summary}${notes}</body></html>`;
           </div>
 
           {/* Mobile spacer */}
-          <div className="md:hidden flex-1" />
+          <div className="lg:hidden flex-1" />
 
           {/* Center */}
           <div className="flex flex-col items-center gap-0.5">
@@ -1909,12 +1913,12 @@ ${entries}${summary}${notes}</body></html>`;
               {isSummarizing && <span className="sm:hidden">…</span>}
             </button>
             </div>
-            <span className="hidden md:block text-[10px] text-slate-700 font-mono">Space</span>
+            <span className="hidden lg:block text-[10px] text-slate-700 font-mono">Space</span>
           </div>
 
           {/* Right: font size (desktop) + notes button (mobile) */}
           <div className="flex items-center gap-1 flex-1 justify-end">
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-1">
               <span className="text-[10px] text-slate-700 mr-1">字号</span>
               <button onClick={() => setFontSizeIdx((i) => Math.max(0, i - 1))} disabled={fontSizeIdx === 0}
                 className="w-6 h-6 flex items-center justify-center rounded text-[11px] font-bold text-slate-500 hover:text-slate-200 hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed"
@@ -1934,7 +1938,7 @@ ${entries}${summary}${notes}</body></html>`;
 
       {/* ── Mobile Notes Sheet ── */}
       {showMobileNotes && (
-        <div className="fixed inset-0 z-50 md:hidden" onClick={() => setShowMobileNotes(false)}>
+        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setShowMobileNotes(false)}>
           <div
             className="absolute inset-x-0 bottom-0 bg-[var(--c-surface)] border-t border-white/8 rounded-t-2xl p-4 max-h-[70vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
