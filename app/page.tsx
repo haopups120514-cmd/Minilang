@@ -27,6 +27,7 @@ interface Session {
   transcripts: TranscriptEntry[];
   summary: string;
   notes: string;       // user's quick notes
+  durationSecs?: number; // actual recorded duration in seconds
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -196,6 +197,7 @@ export default function Mimilang() {
   const targetLangRef     = useRef(targetLang);
   const currentSidRef     = useRef(currentSessionId); // session id ref for ws callbacks
   const timerRef          = useRef<ReturnType<typeof setInterval> | null>(null);
+  const elapsedSecsRef    = useRef(0);
   const volumeBarsRef     = useRef<HTMLDivElement>(null);
   const audioCtxRef       = useRef<AudioContext | null>(null);
   const animFrameRef      = useRef<number | null>(null);
@@ -353,6 +355,8 @@ export default function Mimilang() {
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [isRecording]);
+
+  useEffect(() => { elapsedSecsRef.current = elapsedSecs; }, [elapsedSecs]);
 
   const fmtTime = (s: number) =>
     `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
@@ -734,6 +738,13 @@ export default function Mimilang() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     stopVolumeMonitor();
+    // Save actual recording duration to the session
+    setSessions((prev) =>
+      prev.map((s) => s.id === currentSidRef.current
+        ? { ...s, durationSecs: elapsedSecsRef.current }
+        : s
+      )
+    );
     setIsRecording(false);
     setIsConnecting(false);
     setInterimText("");
@@ -1269,7 +1280,7 @@ ${entries}${summary}${notes}</body></html>`;
                 <rect x="12" y="8" width="2" height="3" rx="1"/>
               </svg>
             </div>
-            <span className="text-[15px] font-semibold text-white" style={{ letterSpacing: "-0.4px" }}>Mimilang</span>
+            <span className="hidden sm:inline text-[15px] font-semibold text-white" style={{ letterSpacing: "-0.4px" }}>Mimilang</span>
           </div>
         </div>
 
@@ -1280,21 +1291,21 @@ ${entries}${summary}${notes}</body></html>`;
               key={lang}
               onClick={() => !busy && handleSrcChange(lang)}
               disabled={busy}
-              className={`px-3 py-1 rounded-lg text-[13px] font-medium transition-colors disabled:opacity-40 ${
+              className={`px-2 sm:px-3 py-1 rounded-lg text-[13px] font-medium transition-colors disabled:opacity-40 ${
                 sourceLang === lang
                   ? "bg-indigo-600 text-white"
                   : "text-slate-500 hover:text-slate-300"
               }`}
             >
-              {LANGUAGES[lang].flag} {LANGUAGES[lang].nativeLabel}
+              {LANGUAGES[lang].flag}<span className="hidden sm:inline"> {LANGUAGES[lang].nativeLabel}</span>
             </button>
           ))}
-          <span className="text-slate-600 text-xs px-1">→ 中文</span>
+          <span className="text-slate-600 text-xs px-0.5 sm:px-1"><span className="hidden sm:inline">→ </span>中文</span>
         </div>
 
         {/* Right: recording status + theme + logout */}
         <div className="flex items-center gap-2 justify-end">
-          {isConnecting && <span className="text-xs text-slate-500 animate-pulse">连接中…</span>}
+          {isConnecting && <span className="hidden sm:inline text-xs text-slate-500 animate-pulse">连接中…</span>}
           {isRecording && (
             <div className="flex items-center gap-2">
               <div ref={volumeBarsRef} className="flex items-end gap-[2px] h-4">
@@ -1624,14 +1635,12 @@ ${entries}${summary}${notes}</body></html>`;
               <div className="flex items-center justify-between">
                 <span className="text-[12px] text-slate-500">时长</span>
                 <span className="text-[12px] font-mono text-slate-300 tabular-nums">
-                  {isRecording ? fmtTime(elapsedSecs) : (
-                    viewingSession
-                      ? (() => {
-                          const secs = Math.floor((new Date().getTime() - new Date(viewingSession.createdAt).getTime()) / 1000);
-                          return fmtTime(Math.min(secs, 5999));
-                        })()
-                      : "00:00"
-                  )}
+                  {isRecording && isViewingCurrent
+                    ? fmtTime(elapsedSecs)
+                    : viewingSession?.durationSecs != null
+                      ? fmtTime(viewingSession.durationSecs)
+                      : "—"
+                  }
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -1663,6 +1672,31 @@ ${entries}${summary}${notes}</body></html>`;
               className="flex-1 bg-[var(--c-surface)] border border-white/5 rounded-lg p-3 text-[13px] text-slate-300 placeholder-slate-700 resize-none focus:outline-none focus:border-indigo-500/50 leading-relaxed"
             />
           </div>
+
+          {/* Usage stats */}
+          {sessions.length > 0 && (() => {
+            const totalMins = Math.round(sessions.reduce((n, s) => n + (s.durationSecs ?? 0), 0) / 60);
+            const totalEntries = sessions.reduce((n, s) => n + s.transcripts.length, 0);
+            return (
+              <div className="shrink-0 border-t border-white/5 p-4">
+                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-3">我的用量</p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-slate-500">总课程</span>
+                    <span className="text-[12px] font-mono text-slate-300 tabular-nums">{sessions.length} 节</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-slate-500">总录音</span>
+                    <span className="text-[12px] font-mono text-slate-300 tabular-nums">{totalMins} 分钟</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-slate-500">总转写</span>
+                    <span className="text-[12px] font-mono text-slate-300 tabular-nums">{totalEntries} 条</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -1711,22 +1745,22 @@ ${entries}${summary}${notes}</body></html>`;
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile secondary controls row */}
-        <div className="flex lg:hidden items-center gap-1 px-3 py-1.5 border-b border-white/[0.04] overflow-x-auto scrollbar-none">
+        <div className="flex lg:hidden items-center gap-0.5 px-2 py-1.5 border-b border-white/[0.04] overflow-x-auto scrollbar-none">
           {/* 清空 */}
           <button onClick={clearCurrentSession} disabled={viewTranscripts.length === 0 || isRecording}
-            className="flex items-center gap-1 min-h-[36px] px-3 rounded-lg text-xs text-slate-500 disabled:opacity-20 disabled:cursor-not-allowed active:bg-white/5 touch-manipulation shrink-0"
+            className="w-10 h-9 flex items-center justify-center rounded-lg text-slate-500 disabled:opacity-20 disabled:cursor-not-allowed active:bg-white/5 touch-manipulation shrink-0"
+            title="清空"
           >
-            <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-            清空
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
           </button>
 
           {/* 导出 */}
           <div className="relative shrink-0">
             <button onClick={(e) => { e.stopPropagation(); setShowExport((v) => !v); }} disabled={viewTranscripts.length === 0}
-              className="flex items-center gap-1 min-h-[36px] px-3 rounded-lg text-xs text-slate-500 disabled:opacity-20 active:bg-white/5 touch-manipulation"
+              className="w-10 h-9 flex items-center justify-center rounded-lg text-slate-500 disabled:opacity-20 active:bg-white/5 touch-manipulation"
+              title="导出"
             >
-              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-              导出
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
             </button>
             {showExport && (
               <div className="absolute bottom-full mb-2 left-0 bg-[var(--c-card)] border border-white/10 rounded-xl py-1.5 shadow-xl w-32 z-10">
@@ -1745,34 +1779,34 @@ ${entries}${summary}${notes}</body></html>`;
 
           {/* 设置 */}
           <button onClick={(e) => { e.stopPropagation(); setShowSettings((v) => !v); }}
-            className={`flex items-center gap-1 min-h-[36px] px-3 rounded-lg text-xs transition-colors touch-manipulation shrink-0 ${showSettings ? "text-slate-300 bg-white/5" : "text-slate-500 active:bg-white/5"}`}
+            className={`flex items-center gap-1 h-9 px-2 rounded-lg text-xs transition-colors touch-manipulation shrink-0 ${showSettings ? "text-slate-300 bg-white/5" : "text-slate-500 active:bg-white/5"}`}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
             </svg>
             设置
           </button>
 
-          <span className="w-px h-4 bg-white/10 shrink-0 mx-1" />
+          <span className="w-px h-4 bg-white/10 shrink-0 mx-0.5" />
 
           {/* 字号 */}
           <button onClick={() => setFontSizeIdx((i) => Math.max(0, i - 1))} disabled={fontSizeIdx === 0}
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-[11px] font-bold text-slate-500 active:bg-white/5 disabled:opacity-20 shrink-0 touch-manipulation"
+            className="w-8 h-9 flex items-center justify-center rounded-lg text-[11px] font-bold text-slate-500 active:bg-white/5 disabled:opacity-20 shrink-0 touch-manipulation"
           >A</button>
           <button onClick={() => setFontSizeIdx((i) => Math.min(FONT_SIZES.length - 1, i + 1))} disabled={fontSizeIdx === FONT_SIZES.length - 1}
-            className="w-9 h-9 flex items-center justify-center rounded-lg text-[13px] font-bold text-slate-500 active:bg-white/5 disabled:opacity-20 shrink-0 touch-manipulation"
+            className="w-8 h-9 flex items-center justify-center rounded-lg text-[13px] font-bold text-slate-500 active:bg-white/5 disabled:opacity-20 shrink-0 touch-manipulation"
           >A</button>
 
-          <span className="w-px h-4 bg-white/10 shrink-0 mx-1" />
+          <span className="w-px h-4 bg-white/10 shrink-0 mx-0.5" />
 
           {/* 笔记 */}
           <button onClick={() => setShowMobileNotes(true)}
-            className="flex items-center gap-1 min-h-[36px] px-3 rounded-lg text-slate-500 active:bg-white/5 transition-colors shrink-0 touch-manipulation"
+            className="w-10 h-9 flex items-center justify-center rounded-lg text-slate-500 active:bg-white/5 transition-colors shrink-0 touch-manipulation"
+            title="笔记"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
             </svg>
-            <span className="text-xs">笔记</span>
           </button>
         </div>
 
@@ -1948,6 +1982,12 @@ ${entries}${summary}${notes}</body></html>`;
             </div>
             <div className="flex gap-5 mb-3 shrink-0">
               <div>
+                <p className="text-[10px] text-slate-600 uppercase tracking-widest mb-0.5">录音时长</p>
+                <p className="text-sm font-mono text-slate-300">
+                  {isRecording && isViewingCurrent ? fmtTime(elapsedSecs) : viewingSession?.durationSecs != null ? fmtTime(viewingSession.durationSecs) : "—"}
+                </p>
+              </div>
+              <div>
                 <p className="text-[10px] text-slate-600 uppercase tracking-widest mb-0.5">条数</p>
                 <p className="text-sm font-mono text-slate-300">{viewTranscripts.length}</p>
               </div>
@@ -1963,6 +2003,29 @@ ${entries}${summary}${notes}</body></html>`;
               placeholder="在这里记录要点、疑问…"
               className="flex-1 bg-[var(--c-bg)] border border-white/5 rounded-lg p-3 text-[13px] text-slate-300 placeholder-slate-700 resize-none focus:outline-none focus:border-indigo-500/50 leading-relaxed min-h-[120px]"
             />
+            {sessions.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-white/5 shrink-0">
+                <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">我的用量</p>
+                <div className="flex gap-5">
+                  <div>
+                    <p className="text-[10px] text-slate-600 uppercase tracking-widest mb-0.5">总课程</p>
+                    <p className="text-sm font-mono text-slate-300">{sessions.length} 节</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-600 uppercase tracking-widest mb-0.5">总录音</p>
+                    <p className="text-sm font-mono text-slate-300">
+                      {Math.round(sessions.reduce((n, s) => n + (s.durationSecs ?? 0), 0) / 60)} 分钟
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-600 uppercase tracking-widest mb-0.5">总转写</p>
+                    <p className="text-sm font-mono text-slate-300">
+                      {sessions.reduce((n, s) => n + s.transcripts.length, 0)} 条
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
