@@ -127,6 +127,8 @@ export default function Mimilang() {
   // Summary
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [showSummary,   setShowSummary]   = useState(false);
+  const [summaryCooldownEnd,  setSummaryCooldownEnd]  = useState(0);
+  const [summaryCooldownLeft, setSummaryCooldownLeft] = useState(0);
 
   // AI correction
   const [correctionEnabled, setCorrectionEnabled] = useState(true);
@@ -358,6 +360,21 @@ export default function Mimilang() {
     if (theme === "light") document.documentElement.classList.add("light");
     else document.documentElement.classList.remove("light");
   }, [theme]);
+
+  // ── Summary cooldown ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("summary-cooldown-end");
+      if (stored) setSummaryCooldownEnd(Number(stored));
+    } catch {}
+  }, []);
+  useEffect(() => {
+    const id = setInterval(() => {
+      const left = summaryCooldownEnd - Date.now();
+      setSummaryCooldownLeft(left > 0 ? Math.ceil(left / 1000) : 0);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [summaryCooldownEnd]);
 
   // ── Persistence (IndexedDB, with localStorage migration) ────────────────────
   useEffect(() => {
@@ -1153,6 +1170,13 @@ export default function Mimilang() {
   // ── Summary ──────────────────────────────────────────────────────────────────
   const generateSummary = async () => {
     if (!viewTranscripts.length) return;
+    if (Date.now() < summaryCooldownEnd) return;
+
+    // Set 5-minute cooldown
+    const cooldownEnd = Date.now() + 5 * 60 * 1000;
+    setSummaryCooldownEnd(cooldownEnd);
+    try { localStorage.setItem("summary-cooldown-end", String(cooldownEnd)); } catch {}
+
     setIsSummarizing(true);
     // 先清空旧笔记再打开弹窗
     setSessions((prev) =>
@@ -2115,16 +2139,24 @@ ${entries}${summary}${notes}</body></html>`;
                 </button>
               </div>
             )}
-            <button onClick={generateSummary} disabled={viewTranscripts.length === 0 || isSummarizing}
+            <button onClick={generateSummary} disabled={viewTranscripts.length === 0 || isSummarizing || summaryCooldownLeft > 0}
               className="flex items-center gap-2 px-3 sm:px-5 py-2 bg-[var(--c-glass)] hover:bg-[var(--c-glass-hover)] border border-[var(--c-glass-border)] disabled:opacity-30 disabled:cursor-not-allowed text-slate-200 rounded-full text-sm font-semibold transition-all backdrop-blur-sm touch-manipulation"
               title="课堂笔记"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-              <span className="hidden sm:inline">{isSummarizing ? "生成中…" : "课堂笔记"}</span>
+              <span className="hidden sm:inline">
+                {isSummarizing ? "生成中…" : summaryCooldownLeft > 0
+                  ? `${Math.floor(summaryCooldownLeft / 60)}:${String(summaryCooldownLeft % 60).padStart(2, "0")}`
+                  : "课堂笔记"}
+              </span>
               {isSummarizing && <span className="sm:hidden">…</span>}
+              {!isSummarizing && summaryCooldownLeft > 0 && (
+                <span className="sm:hidden text-[10px] font-mono">
+                  {Math.floor(summaryCooldownLeft / 60)}:{String(summaryCooldownLeft % 60).padStart(2, "0")}
+                </span>
+              )}
             </button>
             </div>
-            <span className="hidden lg:block text-[10px] text-slate-700 font-mono">Space</span>
           </div>
 
           {/* Right: font size (desktop) + notes button (mobile) */}
@@ -2451,7 +2483,7 @@ ${entries}${summary}${notes}</body></html>`;
               {isSummarizing ? (
                 <div className="flex flex-col items-center justify-center h-32 gap-4">
                   <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm text-slate-500">Gemini 正在生成课堂笔记…</span>
+                  <span className="text-sm text-slate-500">正在生成课堂笔记…</span>
                 </div>
               ) : (
                 <SummaryRenderer text={currentSummary} />

@@ -6,44 +6,8 @@ const LANG_NAMES: Record<string, string> = {
   zh: "中文",
 };
 
-const MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
-
-async function callGemini(model: string, prompt: string, apiKey: string) {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 2048 },
-        safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-        ],
-      }),
-    }
-  );
-  return res;
-}
-
-export async function POST(req: NextRequest) {
-  const { transcript, language } = await req.json();
-
-  if (!transcript?.trim()) {
-    return NextResponse.json({ summary: "暂无转写内容，无法生成笔记。" });
-  }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "缺少 GEMINI_API_KEY" }, { status: 500 });
-  }
-
-  const langName = LANG_NAMES[language] ?? language;
-
-  const prompt = `你是一名专业的课堂笔记助手。请根据以下${langName}课堂转写内容，生成结构清晰、内容完整的课堂笔记。
+const PROMPT = (langName: string, transcript: string) =>
+  `你是一名专业的课堂笔记助手。请根据以下${langName}课堂转写内容，生成结构清晰、内容完整的课堂笔记。
 
 输出格式要求（使用 Markdown，不要用代码块包裹）：
 
@@ -63,45 +27,83 @@ export async function POST(req: NextRequest) {
 转写内容：
 ${transcript}`;
 
-  let hitRateLimit = false;
+// ── Groq ─────────────────────────────────────────────────────────────────────
+async function callGroq(prompt: string) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) return null;
 
-  for (const model of MODELS) {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.3,
+      max_tokens: 2048,
+    }),
+  });
+
+  if (!res.ok) return null;
+  const data = await res.json();
+  return (data.choices?.[0]?.message?.content as string | undefined) ?? null;
+}
+
+// ── Gemini fallback ───────────────────────────────────────────────────────────
+async function callGemini(prompt: string) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  const models = ["gemini-2.0-flash", "gemini-2.0-flash-lite"];
+  for (const model of models) {
     try {
-      let res = await callGemini(model, prompt, apiKey);
-
-      // If rate-limited, wait 20 s and retry once with the same model
-      if (res.status === 429) {
-        hitRateLimit = true;
-        await new Promise((r) => setTimeout(r, 20_000));
-        res = await callGemini(model, prompt, apiKey);
-      }
-
-      if (!res.ok) {
-        console.error(`Gemini [${model}] ${res.status}`);
-        continue;
-      }
-
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: 2048 },
+            safetySettings: [
+              { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+              { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+            ],
+          }),
+        }
+      );
+      if (!res.ok) continue;
       const data = await res.json();
-      const candidate = data.candidates?.[0];
-      if (!candidate) continue;
+      const text: string = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+      if (text.trim()) return text;
+    } catch { continue; }
+  }
+  return null;
+}
 
-      const text: string = candidate.content?.parts?.[0]?.text ?? "";
-      if (!text.trim()) continue;
+export async function POST(req: NextRequest) {
+  const { transcript, language } = await req.json();
 
-      const cleaned = text
-        .replace(/^```(?:markdown)?\s*/i, "")
-        .replace(/\s*```\s*$/, "")
-        .trim();
-
-      return NextResponse.json({ summary: cleaned });
-    } catch (e) {
-      console.error(`Gemini [${model}] exception:`, e);
-    }
+  if (!transcript?.trim()) {
+    return NextResponse.json({ summary: "暂无转写内容，无法生成笔记。" });
   }
 
-  const hint = hitRateLimit
-    ? "免费版 Gemini 每分钟请求数已用完，请稍等 1 分钟后重试。\n如需长期使用，建议在 Google Cloud 开启计费以提升配额。"
-    : "所有模型均请求失败，请检查 GEMINI_API_KEY 是否有效。";
+  const prompt = PROMPT(LANG_NAMES[language] ?? language, transcript);
 
-  return NextResponse.json({ summary: hint });
+  // Try Groq first (faster)
+  const groqResult = await callGroq(prompt);
+  if (groqResult?.trim()) {
+    const cleaned = groqResult.replace(/^```(?:markdown)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+    return NextResponse.json({ summary: cleaned });
+  }
+
+  // Fallback to Gemini
+  const geminiResult = await callGemini(prompt);
+  if (geminiResult?.trim()) {
+    const cleaned = geminiResult.replace(/^```(?:markdown)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+    return NextResponse.json({ summary: cleaned });
+  }
+
+  return NextResponse.json({ summary: "笔记生成失败，请稍后重试。" });
 }
