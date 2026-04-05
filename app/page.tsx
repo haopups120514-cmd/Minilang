@@ -1234,7 +1234,7 @@ ${entries}${summary}${notes}</body></html>`;
 
   return (
     <div
-      className={`flex flex-col h-screen bg-[var(--c-bg)] text-[var(--c-text)] font-sans theme-transition${theme === "light" ? " light" : ""}`}
+      className={`flex flex-col h-dvh bg-[var(--c-bg)] text-[var(--c-text)] font-sans theme-transition${theme === "light" ? " light" : ""}`}
       onClick={() => { setShowExport(false); setShowMicPicker(false); setShowSettings(false); }}
     >
       {/* ── Header ── */}
@@ -1666,52 +1666,41 @@ ${entries}${summary}${notes}</body></html>`;
         </div>
       </div>
 
-      {/* ── Live strip (mobile only, always visible when viewing current session) ── */}
-      {isViewingCurrent && (
+      {/* ── Live strip (mobile only, only during active recording) ── */}
+      {isViewingCurrent && isRecording && (
         <div className="lg:hidden shrink-0 border-t border-indigo-500/20 bg-[var(--c-bg-deep)] px-5 py-3 min-h-[56px] max-h-40">
-          {!isRecording ? (
-            /* 待机状态 */
-            <div className="flex items-center gap-2 h-full">
-              <span className="w-2 h-2 rounded-full bg-slate-700 shrink-0" />
-              <p className="text-sm text-slate-600 italic">点击「开始上课」开始实时转写</p>
-            </div>
-          ) : (
-            /* 录音中 */
+          <div className="flex items-center gap-2 mb-1.5">
+            {isPaused ? (
+              <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">已暂停</span>
+            ) : (
+              <>
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isWhisperProcessing ? "bg-purple-400" : "bg-red-400"}`} />
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${isWhisperProcessing ? "bg-purple-500" : "bg-red-500"}`} />
+                </span>
+                <span className={`text-[10px] font-mono uppercase tracking-wider ${isWhisperProcessing ? "text-purple-400" : "text-red-400"}`}>
+                  {transcriptionEngine === "whisper" ? (isWhisperProcessing ? "识别中…" : "录音中") : "实时"}
+                </span>
+              </>
+            )}
+          </div>
+          {isPaused ? (
+            <p className="text-sm text-slate-600 italic">点击「继续」恢复录音</p>
+          ) : transcriptionEngine === "whisper" ? (
+            <p className="text-sm text-slate-600 italic">
+              {isWhisperProcessing ? "正在识别本段语音…" : "每8秒自动识别一次"}
+            </p>
+          ) : interimText ? (
             <>
-              <div className="flex items-center gap-2 mb-1.5">
-                {isPaused ? (
-                  <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">已暂停</span>
-                ) : (
-                  <>
-                    <span className="relative flex h-2 w-2 shrink-0">
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isWhisperProcessing ? "bg-purple-400" : "bg-red-400"}`} />
-                      <span className={`relative inline-flex rounded-full h-2 w-2 ${isWhisperProcessing ? "bg-purple-500" : "bg-red-500"}`} />
-                    </span>
-                    <span className={`text-[10px] font-mono uppercase tracking-wider ${isWhisperProcessing ? "text-purple-400" : "text-red-400"}`}>
-                      {transcriptionEngine === "whisper" ? (isWhisperProcessing ? "识别中…" : "录音中") : "实时"}
-                    </span>
-                  </>
-                )}
-              </div>
-              {isPaused ? (
-                <p className="text-sm text-slate-600 italic">点击「继续」恢复录音</p>
-              ) : transcriptionEngine === "whisper" ? (
-                <p className="text-sm text-slate-600 italic">
-                  {isWhisperProcessing ? "正在识别本段语音…" : "每8秒自动识别一次"}
+              <p className={`${textCls} ${leading} text-slate-300`}>{interimText}</p>
+              <div className="mt-1 pl-3 border-l-2 border-indigo-500/30">
+                <p className={`${textCls} ${leading} text-indigo-300/70`}>
+                  {interimTrans || <span className="text-slate-600 italic">翻译中…</span>}
                 </p>
-              ) : interimText ? (
-                <>
-                  <p className={`${textCls} ${leading} text-slate-300`}>{interimText}</p>
-                  <div className="mt-1 pl-3 border-l-2 border-indigo-500/30">
-                    <p className={`${textCls} ${leading} text-indigo-300/70`}>
-                      {interimTrans || <span className="text-slate-600 italic">翻译中…</span>}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-slate-600 italic">等待语音输入…</p>
-              )}
+              </div>
             </>
+          ) : (
+            <p className="text-sm text-slate-600 italic">等待语音输入…</p>
           )}
         </div>
       )}
