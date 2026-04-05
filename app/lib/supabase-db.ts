@@ -8,7 +8,8 @@ export async function loadSessionsFromDB(userId: string): Promise<any[]> {
     .eq("user_id", userId)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []).map((row) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data ?? []).map((row: any) => ({
     id:           row.id,
     title:        row.title,
     createdAt:    row.created_at,
