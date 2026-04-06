@@ -28,11 +28,11 @@
 
 /* ── Theme variables ──────────────────────────────────────────────────────── */
 :root {
-  /* Dark: very deep with slight purple-blue tint */
-  --c-bg:       rgba(8,  8,  22, 0.94);
-  --c-surface:  rgba(16, 16, 36, 0.90);
-  --c-card:     rgba(26, 26, 48, 0.88);
-  --c-bg-deep:  rgba(4,  4,  14, 0.97);
+  /* Dark: deep navy-purple base */
+  --c-bg:       #08081a;
+  --c-surface:  #111128;
+  --c-card:     #1a1a36;
+  --c-bg-deep:  #050510;
   --c-text:     #f5f5f7;
   --c-text-dim: #e8e8ed;
   --c-text-2:   #a1a1a6;
@@ -49,22 +49,22 @@
 }
 
 .light {
-  /* Light: crisp white with aurora tint */
-  --c-bg:       rgba(248, 248, 252, 0.95);
-  --c-surface:  rgba(255, 255, 255, 0.88);
-  --c-card:     rgba(238, 238, 248, 0.90);
-  --c-bg-deep:  rgba(242, 242, 250, 0.98);
+  /* Light: crisp white */
+  --c-bg:       #f8f8fc;
+  --c-surface:  #ffffff;
+  --c-card:     #eeeef8;
+  --c-bg-deep:  #f2f2f8;
   --c-text:     #1d1d1f;
   --c-text-dim: #3d3d3f;
   --c-text-2:   #6e6e73;
   --c-border:   rgba(0,0,0,0.07);
   --c-border-m: rgba(0,0,0,0.10);
   --c-border-s: rgba(0,0,0,0.03);
-  /* Glass (light) — frosted white */
-  --c-glass:        rgba(255,255,255,0.60);
+  /* Glass (light) */
+  --c-glass:        rgba(255,255,255,0.65);
   --c-glass-border: rgba(168,139,250,0.20);
-  --c-glass-hover:  rgba(255,255,255,0.72);
-  --c-inset-shine:  rgba(255,255,255,0.85);
+  --c-glass-hover:  rgba(255,255,255,0.80);
+  --c-inset-shine:  rgba(255,255,255,0.90);
   /* Accent (light) */
   --c-accent: #7c3aed;
 }
@@ -79,36 +79,33 @@ html, body {
   font-family: var(--font-body);
 }
 
-/* Body = dark aurora base (always dark, light mode handled in wrapper) */
+/* Body = dark aurora base */
 body {
-  background-color: #040412;
+  background-color: #050510;
   background-image:
     radial-gradient(ellipse 65% 55% at 5%  8%,  rgba(168,139,250,0.18) 0%, transparent 55%),
     radial-gradient(ellipse 55% 50% at 95% 5%,  rgba(125,211,252,0.15) 0%, transparent 55%),
     radial-gradient(ellipse 50% 60% at 80% 95%, rgba(110,231,183,0.12) 0%, transparent 55%),
     radial-gradient(ellipse 60% 45% at 20% 92%, rgba(249,168,212,0.11) 0%, transparent 55%);
-  background-attachment: fixed;
 }
 
-/* ── App wrapper — aurora layer (renders ON TOP of bg-[var(--c-bg)]) ──────── */
-/* Dark mode: subtle aurora on near-opaque dark surface */
+/* ── App wrapper — aurora layer ──────────────────────────────────────────── */
+/* Dark mode: subtle aurora blooms on solid dark surface */
 .ai-wrapper {
   background-image:
-    radial-gradient(ellipse 65% 55% at 5%  8%,  rgba(168,139,250,0.09) 0%, transparent 62%),
-    radial-gradient(ellipse 55% 50% at 95% 5%,  rgba(125,211,252,0.07) 0%, transparent 62%),
-    radial-gradient(ellipse 50% 60% at 80% 95%, rgba(110,231,183,0.06) 0%, transparent 62%),
+    radial-gradient(ellipse 65% 55% at 5%  8%,  rgba(168,139,250,0.10) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 50% at 95% 5%,  rgba(125,211,252,0.08) 0%, transparent 62%),
+    radial-gradient(ellipse 50% 60% at 80% 95%, rgba(110,231,183,0.07) 0%, transparent 62%),
     radial-gradient(ellipse 60% 45% at 20% 92%, rgba(249,168,212,0.06) 0%, transparent 62%);
-  background-attachment: fixed;
 }
 
-/* Light mode: more visible, pastel blooms on white */
+/* Light mode: pastel blooms on white */
 .ai-wrapper.light {
   background-image:
-    radial-gradient(ellipse 65% 55% at 5%  8%,  rgba(168,139,250,0.26) 0%, transparent 58%),
-    radial-gradient(ellipse 55% 50% at 95% 5%,  rgba(125,211,252,0.22) 0%, transparent 58%),
-    radial-gradient(ellipse 50% 60% at 80% 95%, rgba(110,231,183,0.18) 0%, transparent 58%),
-    radial-gradient(ellipse 60% 45% at 20% 92%, rgba(249,168,212,0.16) 0%, transparent 58%);
-  background-attachment: fixed;
+    radial-gradient(ellipse 65% 55% at 5%  8%,  rgba(168,139,250,0.24) 0%, transparent 58%),
+    radial-gradient(ellipse 55% 50% at 95% 5%,  rgba(125,211,252,0.20) 0%, transparent 58%),
+    radial-gradient(ellipse 50% 60% at 80% 95%, rgba(110,231,183,0.16) 0%, transparent 58%),
+    radial-gradient(ellipse 60% 45% at 20% 92%, rgba(249,168,212,0.14) 0%, transparent 58%);
 }
 
 /* ── dvh fallback ────────────────────────────────────────────────────────── */

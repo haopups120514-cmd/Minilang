@@ -210,7 +210,7 @@ export default function Mimilang() {
   const [feedbackMsg,      setFeedbackMsg]      = useState<{ ok: boolean; text: string } | null>(null);
 
   // Q&A
-  const [showAsk,     setShowAsk]     = useState(false);
+  const [showAsk,     setShowAsk]     = useState(false); // kept for compat, unused
   const [askQuestion, setAskQuestion] = useState("");
   const [askAnswer,   setAskAnswer]   = useState("");
   const [askLoading,  setAskLoading]  = useState(false);
@@ -1403,14 +1403,9 @@ ${entries}${summary}${notes}</body></html>`;
             )}
           </button>
           <div className="flex items-center gap-2 shrink-0">
-            <div className="w-[26px] h-[26px] rounded-[7px] bg-[#0071e3] flex items-center justify-center shrink-0">
-              <svg width="14" height="11" viewBox="0 0 14 11" fill="white">
-                <rect x="0"  y="8" width="2" height="3" rx="1"/>
-                <rect x="3"  y="4" width="2" height="7" rx="1"/>
-                <rect x="6"  y="0" width="2" height="11" rx="1"/>
-                <rect x="9"  y="4" width="2" height="7" rx="1"/>
-                <rect x="12" y="8" width="2" height="3" rx="1"/>
-              </svg>
+            <div className="w-[26px] h-[26px] rounded-full flex items-center justify-center shrink-0"
+              style={{ background: "var(--ai-gradient)" }}>
+              <span className="text-white text-[13px] font-bold leading-none">M</span>
             </div>
             <span className="hidden sm:inline text-[15px] font-semibold text-white" style={{ letterSpacing: "-0.4px" }}>Mimilang</span>
           </div>
@@ -1794,15 +1789,62 @@ ${entries}${summary}${notes}</body></html>`;
             </div>
           </div>
 
-          {/* Quick notes */}
+          {/* Cat Q&A (replaces 快速笔记) */}
           <div className="flex flex-col flex-1 p-4 min-h-0">
-            <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2 shrink-0">快速笔记</p>
-            <textarea
-              value={viewingSession?.notes ?? ""}
-              onChange={(e) => updateSessionNotes(e.target.value)}
-              placeholder="在这里记录要点、疑问…"
-              className="flex-1 bg-[var(--c-surface)] border border-white/5 rounded-lg p-3 text-[13px] text-slate-300 placeholder-slate-700 resize-none focus:outline-none focus:border-[#0071e3]/50 leading-relaxed"
-            />
+            {/* Header with mini cat */}
+            <div className="flex items-center gap-3 mb-3 shrink-0">
+              <MiniCat thinking={askLoading} />
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--c-text-2)" }}>课堂问答</p>
+                <p className="text-[10px]" style={{ color: "var(--c-text-2)", opacity: 0.55 }}>
+                  {viewTranscripts.length === 0 ? "录音后可提问" : askLoading ? "思考中…" : "问我课堂相关问题"}
+                </p>
+              </div>
+            </div>
+
+            {/* Answer area */}
+            <div className="flex-1 min-h-0 overflow-y-auto mb-3">
+              {askAnswer && (
+                <div className="text-[13px] leading-relaxed p-3 rounded-xl border whitespace-pre-wrap"
+                  style={{ color: "var(--c-text-dim)", background: "var(--c-glass)", borderColor: "var(--c-glass-border)" }}>
+                  {askAnswer}
+                </div>
+              )}
+              {askLoading && (
+                <div className="flex justify-center mt-4">
+                  <div className="flex gap-1.5">
+                    {[0, 1, 2].map(i => (
+                      <div key={i} className="w-2 h-2 rounded-full animate-bounce"
+                        style={{ background: "var(--c-accent)", animationDelay: `${i * 0.15}s` }}/>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {!askAnswer && !askLoading && viewTranscripts.length > 0 && (
+                <p className="text-[12px] text-center mt-4" style={{ color: "var(--c-text-2)", opacity: 0.45 }}>
+                  问我课堂里出现过的任何问题
+                </p>
+              )}
+            </div>
+
+            {/* Input */}
+            <div className="flex gap-2 shrink-0">
+              <input
+                value={askQuestion}
+                onChange={(e) => setAskQuestion(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askAboutLecture(); } }}
+                placeholder={viewTranscripts.length === 0 ? "先开始录音…" : "有什么问题？"}
+                disabled={viewTranscripts.length === 0 || askLoading}
+                className="flex-1 rounded-xl px-3 py-2 text-[13px] outline-none transition-all"
+                style={{ background: "var(--c-surface)", border: "1px solid var(--c-border-m)", color: "var(--c-text)" }}
+              />
+              <button
+                onClick={askAboutLecture}
+                disabled={!askQuestion.trim() || askLoading || viewTranscripts.length === 0}
+                className="px-3 py-2 rounded-xl text-white text-sm font-bold transition-all disabled:opacity-30"
+                style={{ background: "var(--ai-gradient)" }}
+              >↑</button>
+            </div>
           </div>
 
           {/* Credits section */}
@@ -2003,13 +2045,7 @@ ${entries}${summary}${notes}</body></html>`;
             </svg>
           </button>
 
-          {/* 问答 */}
-          <button onClick={() => { setAskAnswer(""); setShowAsk(true); }} disabled={viewTranscripts.length === 0}
-            className="w-10 h-9 flex items-center justify-center rounded-lg text-slate-500 active:bg-white/5 transition-colors shrink-0 touch-manipulation disabled:opacity-20"
-            title="课堂问答"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </button>
+          {/* 问答 — moved to sidebar cat panel */}
         </div>
 
         {/* Main row */}
@@ -2153,7 +2189,11 @@ ${entries}${summary}${notes}</body></html>`;
             <div className="flex items-center gap-2">
             {!isRecording ? (
               <button onClick={startRecording} disabled={isConnecting || !isOnline} title="开始上课 (Space)"
-                className="btn-record flex items-center gap-2 px-5 py-2 bg-[#0071e3] hover:bg-[#0077ed] active:scale-95 disabled:opacity-50 text-white rounded-full text-sm font-semibold transition-all border border-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_4px_20px_rgba(0,113,227,0.55)] touch-manipulation"
+                className="btn-record flex items-center gap-2 px-5 py-2 active:scale-95 disabled:opacity-50 text-white rounded-full text-sm font-semibold transition-all touch-manipulation"
+                style={{
+                  background: "var(--ai-gradient)",
+                  boxShadow: "0 0 18px rgba(168,139,250,0.35), 0 4px 20px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.20)",
+                }}
               >
                 <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
                 {isConnecting ? "连接中…" : "开始上课"}
@@ -2194,13 +2234,6 @@ ${entries}${summary}${notes}</body></html>`;
                   {Math.floor(summaryCooldownLeft / 60)}:{String(summaryCooldownLeft % 60).padStart(2, "0")}
                 </span>
               )}
-            </button>
-            <button onClick={() => { setAskAnswer(""); setShowAsk(true); }} disabled={viewTranscripts.length === 0}
-              className="flex items-center gap-2 px-3 sm:px-5 py-2 bg-[var(--c-glass)] hover:bg-[var(--c-glass-hover)] border border-[var(--c-glass-border)] disabled:opacity-30 disabled:cursor-not-allowed text-slate-200 rounded-full text-sm font-semibold transition-all backdrop-blur-sm touch-manipulation"
-              title="课堂问答"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span className="hidden sm:inline">课堂问答</span>
             </button>
             </div>
           </div>
@@ -2252,13 +2285,49 @@ ${entries}${summary}${notes}</body></html>`;
                 <p className="text-sm font-mono text-slate-300">{viewTranscripts.reduce((n, t) => n + t.original.length, 0)}</p>
               </div>
             </div>
-            <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2 shrink-0">快速笔记</p>
-            <textarea
-              value={viewingSession?.notes ?? ""}
-              onChange={(e) => updateSessionNotes(e.target.value)}
-              placeholder="在这里记录要点、疑问…"
-              className="flex-1 bg-[var(--c-bg)] border border-white/5 rounded-lg p-3 text-[13px] text-slate-300 placeholder-slate-700 resize-none focus:outline-none focus:border-[#0071e3]/50 leading-relaxed min-h-[120px]"
-            />
+            {/* Cat Q&A (replaces 快速笔记) */}
+            <div className="flex flex-col flex-1 min-h-0 mt-2">
+              <div className="flex items-center gap-3 mb-3 shrink-0">
+                <MiniCat thinking={askLoading} />
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "var(--c-text-2)" }}>课堂问答</p>
+                  <p className="text-[10px]" style={{ color: "var(--c-text-2)", opacity: 0.55 }}>
+                    {viewTranscripts.length === 0 ? "录音后可提问" : askLoading ? "思考中…" : "问我课堂相关问题"}
+                  </p>
+                </div>
+              </div>
+              {askAnswer && (
+                <div className="text-[13px] leading-relaxed p-3 rounded-xl border whitespace-pre-wrap mb-3"
+                  style={{ color: "var(--c-text-dim)", background: "var(--c-glass)", borderColor: "var(--c-glass-border)" }}>
+                  {askAnswer}
+                </div>
+              )}
+              {askLoading && (
+                <div className="flex gap-1.5 justify-center my-3">
+                  {[0, 1, 2].map(i => (
+                    <div key={i} className="w-2 h-2 rounded-full animate-bounce"
+                      style={{ background: "var(--c-accent)", animationDelay: `${i * 0.15}s` }}/>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2 mt-auto">
+                <input
+                  value={askQuestion}
+                  onChange={(e) => setAskQuestion(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askAboutLecture(); } }}
+                  placeholder={viewTranscripts.length === 0 ? "先开始录音…" : "有什么问题？"}
+                  disabled={viewTranscripts.length === 0 || askLoading}
+                  className="flex-1 rounded-xl px-3 py-2 text-[13px] outline-none transition-all"
+                  style={{ background: "var(--c-bg)", border: "1px solid var(--c-border-m)", color: "var(--c-text)" }}
+                />
+                <button
+                  onClick={askAboutLecture}
+                  disabled={!askQuestion.trim() || askLoading || viewTranscripts.length === 0}
+                  className="px-3 py-2 rounded-xl text-white text-sm font-bold transition-all disabled:opacity-30"
+                  style={{ background: "var(--ai-gradient)" }}
+                >↑</button>
+              </div>
+            </div>
             {sessions.length > 0 && (
               <div className="mt-4 pt-4 border-t border-white/5 shrink-0">
                 <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">我的用量</p>
@@ -2640,53 +2709,27 @@ ${entries}${summary}${notes}</body></html>`;
         </div>
       )}
 
-      {/* ── Q&A Modal ── */}
-      {showAsk && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowAsk(false); }}
-        >
-          <div className="w-full max-w-lg bg-[var(--c-surface)] border border-white/8 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
-            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between shrink-0">
-              <p className="font-semibold text-slate-200">课堂问答</p>
-              <button onClick={() => setShowAsk(false)} className="text-slate-500 hover:text-slate-200 text-xl leading-none">×</button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6 min-h-[80px]">
-              {askLoading && (
-                <div className="flex justify-center">
-                  <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
-              {!askLoading && askAnswer && (
-                <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">{askAnswer}</p>
-              )}
-              {!askLoading && !askAnswer && (
-                <p className="text-sm text-slate-600 text-center mt-4">输入问题，AI 将根据课堂内容作答</p>
-              )}
-            </div>
-
-            <div className="px-6 py-4 border-t border-white/5 flex gap-3 shrink-0">
-              <input
-                value={askQuestion}
-                onChange={(e) => setAskQuestion(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askAboutLecture(); } }}
-                placeholder="例：今天课上提到了哪些重要概念？"
-                className="flex-1 bg-[var(--c-glass)] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-[#0071e3]/50"
-              />
-              <button onClick={askAboutLecture} disabled={!askQuestion.trim() || askLoading}
-                className="px-4 py-2.5 bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all shrink-0"
-              >
-                {askLoading ? "…" : "提问"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+// ── Mini Luo Xiaohei cat for Q&A sidebar ─────────────────────────────────────
+function MiniCat({ thinking }: { thinking: boolean }) {
+  return (
+    <div
+      className={`flex items-center justify-center rounded-full shrink-0${thinking ? " animate-pulse" : ""}`}
+      style={{
+        width: 36, height: 36,
+        background: "var(--ai-gradient)",
+        boxShadow: "0 0 12px rgba(168,139,250,0.25)",
+      }}
+    >
+      <span className="text-white font-bold text-[15px] leading-none">M</span>
+    </div>
+  );
+}
 
 function LangSelect({ value, exclude, onChange, disabled, allowAuto = false }: {
   value: string; exclude?: LangKey; onChange: (v: string) => void; disabled: boolean; allowAuto?: boolean;
