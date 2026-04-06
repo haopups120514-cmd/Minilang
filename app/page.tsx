@@ -100,7 +100,7 @@ export default function Mimilang() {
   const [showMobileNotes, setShowMobileNotes] = useState(false);
 
   // Theme
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">("light");
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
@@ -354,11 +354,12 @@ export default function Mimilang() {
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
   }, []);
 
-  // ── Theme init ──────────────────────────────────────────────────────────────
+  // ── Theme init — light mode default ─────────────────────────────────────
   useEffect(() => {
     try {
       const saved = localStorage.getItem("mimilang-theme") as "dark" | "light" | null;
-      if (saved === "light" || saved === "dark") setTheme(saved);
+      if (saved === "dark") setTheme("dark");
+      // no saved or "light" → stays at default "light"
     } catch {}
   }, []);
 

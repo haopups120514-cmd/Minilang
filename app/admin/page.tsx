@@ -12,9 +12,13 @@ interface AdminUser {
   referralCode: string; remaining: number; isBanned: boolean;
 }
 interface Stats {
-  totalSessions: number; totalMins: number; todayActiveUsers: number;
+  totalSessions: number; totalMins: number; avgDurationMins: number;
+  todayActiveUsers: number; yesterdayActiveUsers: number;
+  todaySessionCount: number; newUsersTodayCount: number;
   totalUsers: number; totalFeedback: number;
+  usersActive: number; usersExhausted: number; usersBanned: number;
   hourlyData: { hour: number; count: number }[];
+  dailyData:  { date: string; count: number }[];
 }
 interface Announcement {
   id: string; title: string; content: string; is_active: boolean; created_at: string;
@@ -77,41 +81,154 @@ function StatsTab({ secret }: { secret: string }) {
   if (loading) return <Spinner />;
   if (!stats)  return <p className="text-red-400 text-sm">加载失败</p>;
 
-  const maxCount = Math.max(...stats.hourlyData.map(d => d.count), 1);
+  const maxHourly = Math.max(...stats.hourlyData.map(d => d.count), 1);
+  const maxDaily  = Math.max(...stats.dailyData.map(d => d.count), 1);
+  const activeUserDelta = stats.todayActiveUsers - stats.yesterdayActiveUsers;
+
+  const kpis = [
+    {
+      label: "注册用户",
+      value: stats.totalUsers,
+      sub: `今日新增 ${stats.newUsersTodayCount}`,
+      icon: "👥",
+      color: "text-violet-400",
+      bg: "bg-violet-400/10",
+    },
+    {
+      label: "今日活跃",
+      value: stats.todayActiveUsers,
+      sub: activeUserDelta >= 0 ? `↑ ${activeUserDelta} vs 昨日` : `↓ ${Math.abs(activeUserDelta)} vs 昨日`,
+      subColor: activeUserDelta >= 0 ? "text-emerald-400" : "text-red-400",
+      icon: "⚡",
+      color: "text-sky-400",
+      bg: "bg-sky-400/10",
+    },
+    {
+      label: "总会话数",
+      value: stats.totalSessions,
+      sub: `今日 ${stats.todaySessionCount} 次`,
+      icon: "🎙",
+      color: "text-[#2997ff]",
+      bg: "bg-[#2997ff]/10",
+    },
+    {
+      label: "总转录时长",
+      value: `${stats.totalMins}m`,
+      sub: `平均 ${stats.avgDurationMins} 分钟/次`,
+      icon: "⏱",
+      color: "text-amber-400",
+      bg: "bg-amber-400/10",
+    },
+    {
+      label: "用户反馈",
+      value: stats.totalFeedback,
+      sub: "累计收到",
+      icon: "💬",
+      color: "text-pink-400",
+      bg: "bg-pink-400/10",
+    },
+    {
+      label: "被封禁",
+      value: stats.usersBanned,
+      sub: "当前封禁中",
+      icon: "🚫",
+      color: "text-red-400",
+      bg: "bg-red-400/10",
+    },
+  ];
+
+  const totalCreditsUsers = stats.usersActive + stats.usersExhausted + stats.usersBanned;
+  const activePct    = totalCreditsUsers ? Math.round(stats.usersActive / totalCreditsUsers * 100) : 0;
+  const exhaustedPct = totalCreditsUsers ? Math.round(stats.usersExhausted / totalCreditsUsers * 100) : 0;
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "总会话数",      value: stats.totalSessions },
-          { label: "总转录时长(分)", value: stats.totalMins },
-          { label: "今日活跃用户",  value: stats.todayActiveUsers },
-          { label: "注册用户数",    value: stats.totalUsers },
-        ].map(s => (
-          <Card key={s.label} className="p-4 text-center">
-            <p className="text-2xl font-bold text-white">{s.value ?? "—"}</p>
-            <p className="text-[11px] text-slate-500 mt-1">{s.label}</p>
+    <div className="space-y-5">
+
+      {/* KPI grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {kpis.map(k => (
+          <Card key={k.label} className="p-4 flex items-start gap-3">
+            <div className={`w-9 h-9 rounded-xl ${k.bg} flex items-center justify-center text-lg shrink-0`}>
+              {k.icon}
+            </div>
+            <div className="min-w-0">
+              <p className={`text-xl font-bold ${k.color} leading-tight`}>{k.value ?? "—"}</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">{k.label}</p>
+              {k.sub && (
+                <p className={`text-[10px] mt-0.5 ${(k as { subColor?: string }).subColor ?? "text-slate-600"}`}>{k.sub}</p>
+              )}
+            </div>
           </Card>
         ))}
       </div>
 
+      {/* User credits breakdown */}
       <Card className="p-5">
-        <SectionLabel>过去 24h 每小时新增会话</SectionLabel>
-        <div className="flex items-end gap-1 h-24">
-          {stats.hourlyData.map(d => (
-            <div key={d.hour} className="flex-1 flex flex-col items-center gap-0.5">
-              <div
-                className="w-full bg-[#0071e3]/60 rounded-sm transition-all"
-                style={{ height: `${Math.max(4, (d.count / maxCount) * 88)}px` }}
-                title={`${d.hour}:00 — ${d.count} 次`}
-              />
-              {d.hour % 4 === 0 && (
-                <span className="text-[9px] text-slate-600">{d.hour}h</span>
-              )}
-            </div>
-          ))}
+        <SectionLabel>用户额度状态分布</SectionLabel>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex-1 h-3 rounded-full overflow-hidden bg-white/5 flex">
+            <div className="h-full bg-emerald-500/70 transition-all" style={{ width: `${activePct}%` }} title={`有额度 ${stats.usersActive}`} />
+            <div className="h-full bg-amber-500/60 transition-all" style={{ width: `${exhaustedPct}%` }} title={`额度耗尽 ${stats.usersExhausted}`} />
+            <div className="h-full bg-red-500/60 transition-all" style={{ width: `${100 - activePct - exhaustedPct}%` }} title={`封禁 ${stats.usersBanned}`} />
+          </div>
+          <span className="text-[11px] text-slate-500 shrink-0">{totalCreditsUsers} 人</span>
+        </div>
+        <div className="flex gap-4 text-[11px]">
+          <span className="flex items-center gap-1.5 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-500/70" />有额度 {stats.usersActive}</span>
+          <span className="flex items-center gap-1.5 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-500/60" />已耗尽 {stats.usersExhausted}</span>
+          <span className="flex items-center gap-1.5 text-red-400"><span className="w-2 h-2 rounded-full bg-red-500/60" />封禁 {stats.usersBanned}</span>
         </div>
       </Card>
+
+      {/* 7-day daily trend */}
+      <Card className="p-5">
+        <SectionLabel>近 7 天每日会话数</SectionLabel>
+        <div className="flex items-end gap-1.5 h-28">
+          {stats.dailyData.map((d, i) => {
+            const isToday = i === stats.dailyData.length - 1;
+            const heightPx = Math.max(6, (d.count / maxDaily) * 104);
+            const day = new Date(d.date + "T00:00:00").toLocaleDateString("zh-CN", { weekday: "short" });
+            return (
+              <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+                {d.count > 0 && (
+                  <span className="text-[9px] text-slate-500">{d.count}</span>
+                )}
+                <div
+                  className={`w-full rounded-md transition-all ${isToday ? "bg-violet-400/70" : "bg-[#0071e3]/50"}`}
+                  style={{ height: `${heightPx}px` }}
+                  title={`${d.date} — ${d.count} 次`}
+                />
+                <span className={`text-[9px] ${isToday ? "text-violet-400 font-semibold" : "text-slate-600"}`}>{day}</span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Hourly activity */}
+      <Card className="p-5">
+        <SectionLabel>过去 24h 逐小时会话分布</SectionLabel>
+        <div className="flex items-end gap-0.5 h-20">
+          {stats.hourlyData.map(d => {
+            const heightPx = Math.max(3, (d.count / maxHourly) * 76);
+            const currentHour = new Date().getHours();
+            const isNow = d.hour === currentHour;
+            return (
+              <div key={d.hour} className="flex-1 flex flex-col items-center gap-0.5">
+                <div
+                  className={`w-full rounded-sm transition-all ${isNow ? "bg-sky-400/80" : "bg-[#0071e3]/40"}`}
+                  style={{ height: `${heightPx}px` }}
+                  title={`${d.hour}:00 — ${d.count} 次`}
+                />
+                {d.hour % 6 === 0 && (
+                  <span className={`text-[8px] ${isNow ? "text-sky-400" : "text-slate-700"}`}>{d.hour}h</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
     </div>
   );
 }
