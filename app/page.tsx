@@ -776,7 +776,8 @@ export default function Mimilang() {
   const transcribeBlob = async (blob: Blob, lang: string, prompt?: string): Promise<string> => {
     const { data: { session: authSession } } = await supabase.auth.getSession();
     const fd = new FormData();
-    fd.append("file", blob, "audio.webm");
+    const ext = blob.type.includes("mp4") ? "m4a" : blob.type.includes("ogg") ? "ogg" : "webm";
+    fd.append("file", blob, `audio.${ext}`);
     if (lang !== "auto") fd.append("language", lang);  // omit → Whisper auto-detects
     if (prompt) fd.append("prompt", prompt);
     try {

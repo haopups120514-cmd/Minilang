@@ -34,9 +34,11 @@ export async function POST(req: NextRequest) {
 
   const whisperLang = WHISPER_LANG[lang] ?? lang;
 
-  // Forward to Groq Whisper
+  // Forward to Groq Whisper — use correct extension so Whisper infers format
+  const fileType = (file as Blob).type || "audio/webm";
+  const ext = fileType.includes("mp4") ? "m4a" : fileType.includes("ogg") ? "ogg" : "webm";
   const groqForm = new FormData();
-  groqForm.append("file", file, "audio.webm");
+  groqForm.append("file", file, `audio.${ext}`);
   groqForm.append("model", "whisper-large-v3-turbo");
   groqForm.append("language", whisperLang);
   groqForm.append("response_format", "json");
