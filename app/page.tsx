@@ -1523,13 +1523,13 @@ ${entries}${summary}${notes}</body></html>`;
 
         {/* Sessions panel (overlay) — always in DOM, slide via CSS transition */}
         <div
-          className={`absolute inset-0 z-30 bg-black/10 backdrop-blur-[2px] transition-opacity duration-200 ${
+          className={`absolute inset-0 z-30 bg-black/10 backdrop-blur-[2px] transition-opacity duration-[320ms] ${
             showSessionPanel ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           }`}
           onClick={() => setShowSessionPanel(false)}
         />
         <div
-          className={`absolute left-0 top-0 bottom-0 w-56 bg-[var(--c-surface)] border-r border-white/[0.04] z-40 flex flex-col shadow-2xl transition-transform duration-200 ease-out ${
+          className={`absolute left-0 top-0 bottom-0 w-56 bg-[var(--c-surface)] border-r border-white/[0.04] z-40 flex flex-col shadow-2xl transition-transform duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)] ${
             showSessionPanel ? "translate-x-0" : "-translate-x-full"
           }`}
           onClick={(e) => e.stopPropagation()}
