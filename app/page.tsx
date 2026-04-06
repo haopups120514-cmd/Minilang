@@ -245,10 +245,12 @@ export default function Mimilang() {
   const sentenceBufferSpeaker  = useRef<number | undefined>(undefined);
   const sentenceFlushTimer     = useRef<ReturnType<typeof setTimeout> | null>(null);
   const keepAliveRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tokenRef          = useRef<string>("");  // always-fresh Supabase access token
   const isRecordingRef    = useRef(false);
   const isConnectingRef   = useRef(false);
   const whisperRecorderRef   = useRef<MediaRecorder | null>(null);
   const whisperBatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dbSaveTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isWhisperActiveRef   = useRef(false);
   const doWhisperBatchRef    = useRef<(() => void) | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -283,6 +285,7 @@ export default function Mimilang() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
+      tokenRef.current = data.session?.access_token ?? "";
       setAuthLoading(false);
     }).catch(() => {
       // Safari 下网络失败或 Supabase 初始化异常时，确保不会永久转圈
@@ -290,6 +293,7 @@ export default function Mimilang() {
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
+      tokenRef.current = session?.access_token ?? "";
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -411,6 +415,8 @@ export default function Mimilang() {
           if (p.fontSizeIdx !== undefined) setFontSizeIdx(p.fontSizeIdx);
           if (p.selectedDeviceId) setSelectedDeviceId(p.selectedDeviceId);
           if (p.translationMode) setTranslationMode(p.translationMode);
+          if (p.sourceLang && ALL_LANGS.includes(p.sourceLang)) setSourceLang(p.sourceLang);
+          if (p.targetLang && ALL_LANGS.includes(p.targetLang)) setTargetLang(p.targetLang);
         }
       } catch {}
     }
@@ -424,11 +430,15 @@ export default function Mimilang() {
 
   useEffect(() => {
     if (!user || sessions.length === 0) return;
-    saveSessionsToDB(sessions, user.id).catch(() => {});
+    if (dbSaveTimerRef.current) clearTimeout(dbSaveTimerRef.current);
+    dbSaveTimerRef.current = setTimeout(() => {
+      saveSessionsToDB(sessions, user.id).catch(() => {});
+    }, 5000); // debounce: wait 5s of idle before writing to DB
+    return () => { if (dbSaveTimerRef.current) clearTimeout(dbSaveTimerRef.current); };
   }, [sessions, user]);
 
   useEffect(() => {
-    try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, sourceLang, targetLang, translationMode })); } catch {}
+    try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, sourceLang, targetLang, translationMode, selectedDeviceId })); } catch {}
   }, [fontSizeIdx, sourceLang, targetLang]);
 
   // ── Auto-scroll ─────────────────────────────────────────────────────────────
@@ -538,7 +548,7 @@ export default function Mimilang() {
     try {
       const res = await fetch("/api/translate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({ text, sourceLang: LANGUAGES[src].deeplSource, targetLang: LANGUAGES[tgt].deeplTarget, context }),
       });
       const d = await res.json();
@@ -578,7 +588,7 @@ export default function Mimilang() {
     const context = recentTranscriptsRef.current.slice(-2).map((t) => t.translated || t.original).join("\n");
     fetch("/api/translate", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
       body: JSON.stringify({ text, sourceLang: LANGUAGES[src].deeplSource, targetLang: LANGUAGES[tgt].deeplTarget, context }),
       signal: ctrl.signal,
     })
@@ -615,6 +625,7 @@ export default function Mimilang() {
     setCurrentSessionId(id);
     setViewingSessionId(id);
     currentSidRef.current = id;
+    commitCountRef.current = 0; // reset scene detection counter for new session
     return session;
   }, []);
 
@@ -673,7 +684,7 @@ export default function Mimilang() {
     if (texts.length < 5) return;
     fetch("/api/detect-scene", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
       body: JSON.stringify({ texts }),
     })
       .then((r) => r.json())
@@ -710,7 +721,7 @@ export default function Mimilang() {
       const sceneHint = sceneHintRef.current;
       fetch("/api/process", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({ text: pending, sourceLang: src, targetLang: tgt, context: ctx, scene, sceneHint }),
       })
         .then((r) => r.json())
@@ -746,7 +757,7 @@ export default function Mimilang() {
       setCorrectingIds((prev) => new Set([...prev, newId]));
       fetch("/api/process", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({ text, sourceLang: src, targetLang: tgt, context: contextText, scene: detectedSceneRef.current, sceneHint: sceneHintRef.current }),
       })
         .then((r) => r.json())
@@ -1195,7 +1206,7 @@ export default function Mimilang() {
     try {
       const res = await fetch("/api/summarize", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({
           transcript: viewTranscripts.map((t) => t.original).join("\n"),
           language: viewingSession?.sourceLang ?? sourceLang,
@@ -1222,7 +1233,7 @@ export default function Mimilang() {
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
         body: JSON.stringify({
           transcript: viewTranscripts.map((t) => t.original).join("\n"),
           question: askQuestion,
@@ -1273,18 +1284,19 @@ export default function Mimilang() {
   const printSession = () => {
     const s = viewingSession ?? currentSession;
     if (!s) return;
+    const esc = (str: string) => str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     const srcInfo = LANGUAGES[s.sourceLang];
     const tgtInfo = LANGUAGES[s.targetLang];
     const dateStr = new Date(s.createdAt).toLocaleString("zh-CN");
     const entries = s.transcripts.map((t) => `
       <div class="entry">
-        <div class="time">${t.timestamp}</div>
-        <div class="original">${t.original}</div>
-        <div class="translated">${t.translated}</div>
+        <div class="time">${esc(t.timestamp)}</div>
+        <div class="original">${esc(t.original)}</div>
+        <div class="translated">${esc(t.translated)}</div>
       </div>`).join("");
-    const summary = s.summary ? `<div class="section"><h2>课堂笔记</h2><pre>${s.summary}</pre></div>` : "";
-    const notes   = s.notes?.trim() ? `<div class="section"><h2>快速笔记</h2><pre>${s.notes}</pre></div>` : "";
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${s.title} - Mimilang</title>
+    const summary = s.summary ? `<div class="section"><h2>课堂笔记</h2><pre>${esc(s.summary)}</pre></div>` : "";
+    const notes   = s.notes?.trim() ? `<div class="section"><h2>快速笔记</h2><pre>${esc(s.notes)}</pre></div>` : "";
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(s.title)} - Mimilang</title>
 <style>body{font-family:system-ui,sans-serif;max-width:800px;margin:0 auto;padding:24px;color:#1a1a1a}
 h1{font-size:1.4rem;margin-bottom:.25rem}.meta{font-size:.85rem;color:#666;margin-bottom:2rem}
 .entry{margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid #eee;page-break-inside:avoid}
@@ -1293,8 +1305,8 @@ h1{font-size:1.4rem;margin-bottom:.25rem}.meta{font-size:.85rem;color:#666;margi
 .section{margin-top:2rem;padding-top:1.5rem;border-top:2px solid #eee}h2{font-size:1.05rem;margin-bottom:.75rem}
 pre{font-family:inherit;white-space:pre-wrap;font-size:.9rem;color:#333}
 @media print{@page{margin:2cm}}</style></head><body>
-<h1>${s.title}</h1>
-<div class="meta">日期：${dateStr}　语言：${srcInfo.nativeLabel} → ${tgtInfo.nativeLabel}</div>
+<h1>${esc(s.title)}</h1>
+<div class="meta">日期：${esc(dateStr)}　语言：${esc(srcInfo.nativeLabel)} → ${esc(tgtInfo.nativeLabel)}</div>
 ${entries}${summary}${notes}</body></html>`;
     const w = window.open("", "_blank");
     if (!w) return;
@@ -2148,12 +2160,12 @@ ${entries}${summary}${notes}</body></html>`;
                   {/* Microphone */}
                   <div className="pt-2.5 border-t border-white/5">
                     <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">麦克风</p>
-                    <button disabled={isRecording} onClick={() => { setSelectedDeviceId(""); try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, translationMode, selectedDeviceId: "" })); } catch {} }}
+                    <button disabled={isRecording} onClick={() => { setSelectedDeviceId(""); try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, sourceLang, targetLang, translationMode, selectedDeviceId: "" })); } catch {} }}
                       className={`w-full text-left px-2 py-1 rounded text-[11px] transition-colors mb-0.5 disabled:opacity-40 ${!selectedDeviceId ? "text-emerald-400" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"}`}
                     >系统默认</button>
                     {audioDevices.map((d) => (
                       <button key={d.deviceId} disabled={isRecording}
-                        onClick={() => { setSelectedDeviceId(d.deviceId); try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, translationMode, selectedDeviceId: d.deviceId })); } catch {} }}
+                        onClick={() => { setSelectedDeviceId(d.deviceId); try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, sourceLang, targetLang, translationMode, selectedDeviceId: d.deviceId })); } catch {} }}
                         className={`w-full text-left px-2 py-1 rounded text-[11px] truncate transition-colors mb-0.5 disabled:opacity-40 ${selectedDeviceId === d.deviceId ? "text-emerald-400" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"}`}
                         title={d.label || d.deviceId}
                       >{d.label || `麦克风 ${d.deviceId.slice(0, 8)}…`}</button>
@@ -2431,12 +2443,12 @@ ${entries}${summary}${notes}</body></html>`;
             <div className="pt-4 border-t border-white/5">
               <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-3">麦克风</p>
               <button disabled={isRecording}
-                onClick={() => { setSelectedDeviceId(""); try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, translationMode, selectedDeviceId: "" })); } catch {} }}
+                onClick={() => { setSelectedDeviceId(""); try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, sourceLang, targetLang, translationMode, selectedDeviceId: "" })); } catch {} }}
                 className={`w-full text-left px-3 py-2.5 rounded-lg text-[13px] transition-colors mb-1 disabled:opacity-40 touch-manipulation ${!selectedDeviceId ? "text-emerald-400 bg-emerald-500/10" : "text-slate-500 active:bg-white/5"}`}
               >系统默认</button>
               {audioDevices.map((d) => (
                 <button key={d.deviceId} disabled={isRecording}
-                  onClick={() => { setSelectedDeviceId(d.deviceId); try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, translationMode, selectedDeviceId: d.deviceId })); } catch {} }}
+                  onClick={() => { setSelectedDeviceId(d.deviceId); try { localStorage.setItem(LS_PREFS, JSON.stringify({ fontSizeIdx, sourceLang, targetLang, translationMode, selectedDeviceId: d.deviceId })); } catch {} }}
                   className={`w-full text-left px-3 py-2.5 rounded-lg text-[13px] truncate transition-colors mb-1 disabled:opacity-40 touch-manipulation ${selectedDeviceId === d.deviceId ? "text-emerald-400 bg-emerald-500/10" : "text-slate-500 active:bg-white/5"}`}
                   title={d.label || d.deviceId}
                 >{d.label || `麦克风 ${d.deviceId.slice(0, 8)}…`}</button>

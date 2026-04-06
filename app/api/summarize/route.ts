@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "../_auth";
 
 const LANG_NAMES: Record<string, string> = {
   ja: "日语",
@@ -83,6 +84,8 @@ async function callGemini(prompt: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const { err } = await requireAuth(req);
+  if (err) return err;
   const { transcript, language } = await req.json();
 
   if (!transcript?.trim()) {

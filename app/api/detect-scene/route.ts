@@ -3,10 +3,13 @@
  * Returns { scene: string, hint: string } via Groq.
  */
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "../_auth";
 
 const SCENES = ["大学课堂", "商务会议", "医疗问诊", "日常对话", "其他"];
 
 export async function POST(req: NextRequest) {
+  const { err } = await requireAuth(req);
+  if (err) return err;
   const { texts } = await req.json() as { texts: string[] };
   if (!texts?.length) return NextResponse.json({ scene: "", hint: "" });
 

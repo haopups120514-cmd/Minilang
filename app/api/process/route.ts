@@ -7,6 +7,7 @@
  *   3. Gemini 2.0 Flash Lite (fastest Gemini, ~500ms)
  */
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "../_auth";
 
 const LANG_NAMES: Record<string, string> = {
   ja: "日语", en: "英语", zh: "中文",
@@ -58,6 +59,8 @@ function parseResult(raw: string, fallback: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const { err } = await requireAuth(req);
+  if (err) return err;
   const { text, sourceLang, targetLang, context, scene, sceneHint } = await req.json();
   if (!text?.trim()) return NextResponse.json({ corrected: text ?? "", translated: "" });
 

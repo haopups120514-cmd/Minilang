@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "../_auth";
 
 const LANG_NAME: Record<string, string> = {
   JA: "日语", EN: "英语", "EN-US": "英语", "EN-GB": "英语",
@@ -20,6 +21,8 @@ function buildSystemPrompt(srcName: string, tgtName: string, context: string): s
 }
 
 export async function POST(req: NextRequest) {
+  const { err } = await requireAuth(req);
+  if (err) return err;
   const { text, sourceLang, targetLang, context } = await req.json();
   if (!text?.trim()) return NextResponse.json({ translatedText: "" });
 
