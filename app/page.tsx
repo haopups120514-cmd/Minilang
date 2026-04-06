@@ -1847,78 +1847,61 @@ ${entries}${summary}${notes}</body></html>`;
             </div>
           </div>
 
-          {/* Credits section */}
+          {/* Credits section — compact */}
           {creditsRemaining !== null && (
-            <div className="shrink-0 border-t border-white/5 p-4 space-y-4">
-              <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">我的时长</p>
-
-              {/* Balance */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[12px] text-slate-500">本月剩余</span>
-                  <span className={`text-[12px] font-mono font-semibold ${creditsRemaining <= 10 ? "text-red-400" : creditsRemaining <= 30 ? "text-amber-400" : "text-emerald-400"}`}>
-                    {creditsRemaining} 分钟
-                  </span>
-                </div>
-                <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${creditsRemaining <= 10 ? "bg-red-500" : creditsRemaining <= 30 ? "bg-amber-500" : "bg-emerald-500"}`}
-                    style={{ width: `${Math.min(100, (creditsRemaining / 120) * 100)}%` }}
-                  />
-                </div>
+            <div className="shrink-0 border-t border-white/5 px-3 py-2.5 space-y-2">
+              {/* Balance row */}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest">时长</span>
+                <span className={`text-[11px] font-mono font-semibold ${creditsRemaining <= 10 ? "text-red-400" : creditsRemaining <= 30 ? "text-amber-400" : "text-emerald-400"}`}>
+                  {creditsRemaining} 分钟
+                </span>
+              </div>
+              <div className="w-full h-0.5 bg-white/8 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${creditsRemaining <= 10 ? "bg-red-500" : creditsRemaining <= 30 ? "bg-amber-500" : "bg-emerald-500"}`}
+                  style={{ width: `${Math.min(100, (creditsRemaining / 120) * 100)}%` }}
+                />
               </div>
 
-              {/* Referral code */}
-              {referralCode && (
-                <div>
-                  <p className="text-[11px] text-slate-600 mb-1">我的邀请码</p>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[13px] text-[#2997ff] bg-[#0071e3]/10 px-2 py-1 rounded-lg tracking-widest">{referralCode}</span>
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(referralCode); setInviteCopied(true); setTimeout(() => setInviteCopied(false), 1500); }}
-                      className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
-                    >{inviteCopied ? "已复制" : "复制"}</button>
-                  </div>
-                  <p className="text-[10px] text-slate-600 mt-1">好友使用后各得奖励</p>
-                </div>
-              )}
-
-              {/* Redemption code */}
-              <div>
-                <p className="text-[11px] text-slate-600 mb-1">兑换时长码</p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="输入兑换码"
-                    value={redeemInput}
-                    onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
-                    className="flex-1 bg-white/5 border border-white/8 rounded-lg px-2 py-1.5 text-[12px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] font-mono min-w-0"
-                  />
+              {/* Referral + redeem in one row */}
+              <div className="flex items-center gap-2">
+                {referralCode && (
                   <button
-                    onClick={async () => {
-                      if (!redeemInput.trim()) return;
-                      setRedeemLoading(true); setRedeemMsg(null);
-                      const { data } = await supabase.auth.getSession();
-                      const token = data.session?.access_token;
-                      if (!token) { setRedeemMsg({ ok: false, text: "请先登录" }); setRedeemLoading(false); return; }
-                      const r = await fetch("/api/credits/redeem", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ code: redeemInput.trim() }) });
-                      const d = await r.json();
-                      if (r.ok) { setRedeemMsg({ ok: true, text: `+${d.minutesAdded} 分钟` }); setCreditsRemaining(d.minutesRemaining); setRedeemInput(""); }
-                      else { setRedeemMsg({ ok: false, text: d.error }); }
-                      setRedeemLoading(false);
-                    }}
-                    disabled={redeemLoading || !redeemInput.trim()}
-                    className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-40 text-white text-[12px] px-3 py-1.5 rounded-lg transition-colors shrink-0"
-                  >{redeemLoading ? "…" : "兑换"}</button>
-                </div>
-                {redeemMsg && <p className={`text-[11px] mt-1.5 ${redeemMsg.ok ? "text-emerald-400" : "text-red-400"}`}>{redeemMsg.text}</p>}
+                    onClick={() => { navigator.clipboard.writeText(referralCode); setInviteCopied(true); setTimeout(() => setInviteCopied(false), 1500); }}
+                    className="text-[10px] font-mono text-[#2997ff] bg-[#0071e3]/10 px-2 py-1 rounded-md tracking-widest shrink-0 hover:bg-[#0071e3]/20 transition-colors"
+                    title="点击复制邀请码"
+                  >{inviteCopied ? "已复制" : referralCode}</button>
+                )}
+                <input
+                  type="text"
+                  placeholder="兑换码"
+                  value={redeemInput}
+                  onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
+                  className="flex-1 bg-white/5 border border-white/8 rounded-md px-2 py-1 text-[11px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] font-mono min-w-0"
+                />
+                <button
+                  onClick={async () => {
+                    if (!redeemInput.trim()) return;
+                    setRedeemLoading(true); setRedeemMsg(null);
+                    const { data } = await supabase.auth.getSession();
+                    const token = data.session?.access_token;
+                    if (!token) { setRedeemMsg({ ok: false, text: "请先登录" }); setRedeemLoading(false); return; }
+                    const r = await fetch("/api/credits/redeem", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ code: redeemInput.trim() }) });
+                    const d = await r.json();
+                    if (r.ok) { setRedeemMsg({ ok: true, text: `+${d.minutesAdded}m` }); setCreditsRemaining(d.minutesRemaining); setRedeemInput(""); }
+                    else { setRedeemMsg({ ok: false, text: d.error }); }
+                    setRedeemLoading(false);
+                  }}
+                  disabled={redeemLoading || !redeemInput.trim()}
+                  className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-40 text-white text-[11px] px-2 py-1 rounded-md transition-colors shrink-0"
+                >{redeemLoading ? "…" : "兑换"}</button>
               </div>
+              {redeemMsg && <p className={`text-[10px] ${redeemMsg.ok ? "text-emerald-400" : "text-red-400"}`}>{redeemMsg.text}</p>}
               <button
                 onClick={() => setShowFeedback(true)}
-                className="w-full mt-2 text-[11px] text-slate-600 hover:text-slate-400 border border-white/5 hover:border-white/10 rounded-lg py-1.5 transition-colors"
-              >
-                ✉️ 反馈 / 报告问题
-              </button>
+                className="w-full text-[10px] text-slate-600 hover:text-slate-400 transition-colors text-left"
+              >✉️ 反馈 / 报告问题</button>
             </div>
           )}
         </div>
@@ -2218,7 +2201,9 @@ ${entries}${summary}${notes}</body></html>`;
                 </button>
               </div>
             )}
-            <button onClick={generateSummary} disabled={viewTranscripts.length === 0 || isSummarizing || summaryCooldownLeft > 0}
+            <button
+              onClick={() => viewingSession?.summary ? setShowSummary(true) : generateSummary()}
+              disabled={viewTranscripts.length === 0 || (!viewingSession?.summary && (isSummarizing || summaryCooldownLeft > 0))}
               className="flex items-center gap-2 px-3 sm:px-5 py-2 bg-[var(--c-glass)] hover:bg-[var(--c-glass-hover)] border border-[var(--c-glass-border)] disabled:opacity-30 disabled:cursor-not-allowed text-slate-200 rounded-full text-sm font-semibold transition-all backdrop-blur-sm touch-manipulation"
               title="课堂笔记"
             >
@@ -2591,7 +2576,18 @@ ${entries}${summary}${notes}</body></html>`;
                   )}
                 </div>
               </div>
-              <button onClick={() => setShowSummary(false)} className="text-slate-500 hover:text-slate-200 text-xl leading-none p-1">×</button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={generateSummary}
+                  disabled={summaryCooldownLeft > 0 || isSummarizing || viewTranscripts.length === 0}
+                  className="text-[11px] text-slate-500 hover:text-slate-300 disabled:opacity-40 transition-colors"
+                >
+                  {summaryCooldownLeft > 0
+                    ? `${Math.floor(summaryCooldownLeft / 60)}:${String(summaryCooldownLeft % 60).padStart(2, "0")} 后可刷新`
+                    : isSummarizing ? "生成中…" : "重新生成"}
+                </button>
+                <button onClick={() => setShowSummary(false)} className="text-slate-500 hover:text-slate-200 text-xl leading-none p-1">×</button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
