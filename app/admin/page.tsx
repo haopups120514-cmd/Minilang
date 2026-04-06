@@ -101,7 +101,7 @@ function StatsTab({ secret }: { secret: string }) {
           {stats.hourlyData.map(d => (
             <div key={d.hour} className="flex-1 flex flex-col items-center gap-0.5">
               <div
-                className="w-full bg-indigo-500/60 rounded-sm transition-all"
+                className="w-full bg-[#0071e3]/60 rounded-sm transition-all"
                 style={{ height: `${Math.max(4, (d.count / maxCount) * 88)}px` }}
                 title={`${d.hour}:00 — ${d.count} 次`}
               />
@@ -151,7 +151,7 @@ function UsersTab({ secret }: { secret: string }) {
         placeholder="搜索邮箱…"
         value={search}
         onChange={e => setSearch(e.target.value)}
-        className="w-full bg-[#0d1117] border border-white/8 rounded-xl px-4 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+        className="w-full bg-[#1d1d1f] border border-white/8 rounded-xl px-4 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3]"
       />
       <Card>
         {loading ? <Spinner /> : filtered.length === 0 ? (
@@ -163,7 +163,7 @@ function UsersTab({ secret }: { secret: string }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-white truncate">{u.email}</p>
-                    {u.displayName && <span className="text-[11px] text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded shrink-0">{u.displayName}</span>}
+                    {u.displayName && <span className="text-[11px] text-[#2997ff] bg-[#0071e3]/10 px-1.5 py-0.5 rounded shrink-0">{u.displayName}</span>}
                   </div>
                   <p className="text-[11px] text-slate-500">
                     注册 {new Date(u.createdAt).toLocaleDateString("zh-CN")}
@@ -171,7 +171,7 @@ function UsersTab({ secret }: { secret: string }) {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className={`text-sm font-mono font-semibold ${u.remaining < 30 ? "text-red-400" : "text-indigo-400"}`}>
+                  <p className={`text-sm font-mono font-semibold ${u.remaining < 30 ? "text-red-400" : "text-[#2997ff]"}`}>
                     {u.remaining} 分钟
                   </p>
                   {u.remaining < 30 && <Badge color="red">时长不足</Badge>}
@@ -290,12 +290,12 @@ function CodesTab({ secret }: { secret: string }) {
           {createMsg && <p className={`text-xs ${createMsg.startsWith("✓") ? "text-emerald-400" : "text-red-400"}`}>{createMsg}</p>}
           <div className="flex items-center gap-3">
             <button type="submit" disabled={creating}
-              className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
+              className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
               {creating ? "创建中…" : "创建"}
             </button>
             <span className="text-slate-600 text-xs">或批量</span>
             <input type="number" min="1" max="100" value={batchCount} onChange={e => setBatchCount(e.target.value)}
-              className="w-16 bg-[#0d1117] border border-white/8 rounded-lg px-2 py-1.5 text-sm text-slate-100 focus:outline-none" />
+              className="w-16 bg-[#1d1d1f] border border-white/8 rounded-lg px-2 py-1.5 text-sm text-slate-100 focus:outline-none" />
             <span className="text-slate-500 text-xs">个</span>
             <button type="button" onClick={batchCreate} disabled={batching}
               className="border border-white/10 hover:border-white/20 disabled:opacity-50 text-slate-300 text-sm px-4 py-2 rounded-xl transition-colors">
@@ -311,7 +311,7 @@ function CodesTab({ secret }: { secret: string }) {
           {(["all", "active", "expired", "exhausted"] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={`text-xs px-2.5 py-1 rounded-lg transition-colors ${
-                filter === f ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-300"
+                filter === f ? "bg-[#0071e3] text-white" : "text-slate-500 hover:text-slate-300"
               }`}>
               {{ all: "全部", active: "可用", expired: "已过期", exhausted: "已用完" }[f]}
             </button>
@@ -330,7 +330,7 @@ function CodesTab({ secret }: { secret: string }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <button onClick={() => copyCode(c.code)}
-                        className="font-mono text-sm text-white hover:text-indigo-300 transition-colors">
+                        className="font-mono text-sm text-white hover:text-[#2997ff] transition-colors">
                         {c.code}
                       </button>
                       {copied === c.code   && <span className="text-[10px] text-emerald-400">已复制</span>}
@@ -341,7 +341,7 @@ function CodesTab({ secret }: { secret: string }) {
                     {c.note && <p className="text-[11px] text-slate-500">{c.note}</p>}
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-mono text-indigo-400">{c.minutes} 分钟</p>
+                    <p className="text-sm font-mono text-[#2997ff]">{c.minutes} 分钟</p>
                     <p className="text-[11px] text-slate-500">{c.uses_count}/{c.max_uses} 次</p>
                   </div>
                   {c.expires_at && (
@@ -413,12 +413,12 @@ function AnnouncementsTab({ secret }: { secret: string }) {
             <label className="text-[11px] text-slate-500 mb-1 block">内容</label>
             <textarea
               value={content} onChange={e => setContent(e.target.value)} required rows={4}
-              className="w-full bg-[#0d1117] border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 resize-none"
+              className="w-full bg-[#1d1d1f] border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] resize-none"
             />
           </div>
           {msg && <p className={`text-xs ${msg.startsWith("✓") ? "text-emerald-400" : "text-red-400"}`}>{msg}</p>}
           <button type="submit" disabled={creating}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
+            className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors">
             {creating ? "发布中…" : "发布"}
           </button>
         </form>
@@ -493,7 +493,7 @@ function FeedbackTab({ secret }: { secret: string }) {
         {(["all", "pending", "resolved"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`text-xs px-2.5 py-1 rounded-lg transition-colors ${
-              filter === f ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-300"
+              filter === f ? "bg-[#0071e3] text-white" : "text-slate-500 hover:text-slate-300"
             }`}>
             {{ all: "全部", pending: "待处理", resolved: "已处理" }[f]}
           </button>
@@ -560,7 +560,7 @@ function InvitesTab({ secret }: { secret: string }) {
         {(["leaderboard", "events"] as const).map(v => (
           <button key={v} onClick={() => setView(v)}
             className={`text-xs px-2.5 py-1 rounded-lg transition-colors ${
-              view === v ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-300"
+              view === v ? "bg-[#0071e3] text-white" : "text-slate-500 hover:text-slate-300"
             }`}>
             {v === "leaderboard" ? "邀请排行榜" : "邀请明细"}
           </button>
@@ -579,7 +579,7 @@ function InvitesTab({ secret }: { secret: string }) {
                     {i + 1}
                   </span>
                   <p className="flex-1 text-sm text-slate-200 truncate">{l.email}</p>
-                  <p className="text-sm font-mono text-indigo-400">{l.count} 人</p>
+                  <p className="text-sm font-mono text-[#2997ff]">{l.count} 人</p>
                 </div>
               ))}
             </div>
@@ -592,7 +592,7 @@ function InvitesTab({ secret }: { secret: string }) {
               {data.inviteEvents.map((ev, i) => (
                 <div key={i} className="px-5 py-3">
                   <p className="text-xs text-slate-300">
-                    <span className="text-indigo-300">{ev.inviterEmail}</span>
+                    <span className="text-[#2997ff]">{ev.inviterEmail}</span>
                     <span className="text-slate-500"> 邀请了 </span>
                     <span className="text-slate-200">{ev.inviteeEmail}</span>
                   </p>
@@ -653,7 +653,7 @@ function ApiQuotaTab({ secret }: { secret: string }) {
             </div>
             <div className="h-2 bg-white/5 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${Number(deepl.pct) > 80 ? "bg-red-500" : "bg-indigo-500"}`}
+                className={`h-full rounded-full transition-all ${Number(deepl.pct) > 80 ? "bg-red-500" : "bg-[#0071e3]"}`}
                 style={{ width: `${Math.min(Number(deepl.pct), 100)}%` }}
               />
             </div>
@@ -705,7 +705,7 @@ function ApiQuotaTab({ secret }: { secret: string }) {
 function Spinner() {
   return (
     <div className="flex items-center justify-center py-10">
-      <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
@@ -722,7 +722,7 @@ function InputField({
       <label className="text-[11px] text-slate-500 mb-1 block">{label}</label>
       <input
         type={type} value={value} onChange={onChange} placeholder={placeholder} required={required}
-        className={`w-full bg-[#0d1117] border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 ${mono ? "font-mono" : ""}`}
+        className={`w-full bg-[#1d1d1f] border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] ${mono ? "font-mono" : ""}`}
       />
     </div>
   );
@@ -747,7 +747,7 @@ export default function AdminPage() {
 
   if (!authed) {
     return (
-      <div className="min-h-screen bg-[#0d1117] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#1d1d1f] flex items-center justify-center px-4">
         <div className="w-full max-w-sm bg-[#161b22] border border-white/8 rounded-2xl p-6">
           <div className="text-center mb-6">
             <p className="text-lg font-semibold text-white">Mimilang 管理后台</p>
@@ -756,11 +756,11 @@ export default function AdminPage() {
           <form onSubmit={handleLogin} className="space-y-3">
             <input type="password" placeholder="ADMIN_SECRET" value={secret}
               onChange={e => setSecret(e.target.value)} required
-              className="w-full bg-[#0d1117] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-[#1d1d1f] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3]"
             />
             {error && <p className="text-red-400 text-xs">{error}</p>}
             <button type="submit" disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-xl transition-colors">
+              className="w-full bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-xl transition-colors">
               {loading ? "验证中…" : "登录"}
             </button>
           </form>
@@ -770,7 +770,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-slate-200">
+    <div className="min-h-screen bg-[#1d1d1f] text-slate-200">
       {/* Header */}
       <div className="border-b border-white/5 px-4 py-3 flex items-center justify-between">
         <p className="text-sm font-semibold text-white">Mimilang 管理后台</p>
@@ -787,7 +787,7 @@ export default function AdminPage() {
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`flex items-center gap-1.5 px-4 py-3 text-sm border-b-2 transition-colors whitespace-nowrap ${
                 tab === t.id
-                  ? "border-indigo-500 text-white"
+                  ? "border-[#0071e3] text-white"
                   : "border-transparent text-slate-500 hover:text-slate-300"
               }`}>
               <span>{t.icon}</span>

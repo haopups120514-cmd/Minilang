@@ -60,7 +60,7 @@ export default function AuthPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2.5 mb-2">
-            <div className="w-[34px] h-[34px] rounded-[9px] bg-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-[34px] h-[34px] rounded-[9px] bg-[#0071e3] flex items-center justify-center shrink-0">
               <svg width="18" height="14" viewBox="0 0 18 14" fill="white">
                 <rect x="0"    y="10" width="2.5" height="4"  rx="1.25"/>
                 <rect x="3.75" y="5"  width="2.5" height="9"  rx="1.25"/>
@@ -84,7 +84,7 @@ export default function AuthPage() {
                   key={t}
                   onClick={() => switchTab(t)}
                   className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    tab === t ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-300"
+                    tab === t ? "bg-[#0071e3] text-white" : "text-slate-500 hover:text-slate-300"
                   }`}
                 >
                   {t === "login" ? "登录" : "注册"}
@@ -112,7 +112,7 @@ export default function AuthPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-[var(--c-bg)] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full bg-[var(--c-bg)] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] transition-colors"
             />
             {view !== "forgot" && (
               <input
@@ -122,7 +122,7 @@ export default function AuthPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full bg-[var(--c-bg)] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-[var(--c-bg)] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] transition-colors"
               />
             )}
 
@@ -137,7 +137,7 @@ export default function AuthPage() {
                   onChange={(e) => setInviteCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   required
                   maxLength={6}
-                  className="w-full bg-[var(--c-bg)] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors font-mono tracking-[0.3em] text-center"
+                  className="w-full bg-[var(--c-bg)] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] transition-colors font-mono tracking-[0.3em] text-center"
                 />
                 <p className="mt-1.5 text-[11px] text-slate-600 text-center">联系管理员获取当前 6 位验证码</p>
               </div>
@@ -149,7 +149,7 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-2.5 rounded-xl transition-colors"
+              className="w-full bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-2.5 rounded-xl transition-colors"
             >
               {loading ? "请稍候…" : view === "forgot" ? "发送重置链接" : tab === "login" ? "登录" : "注册"}
             </button>

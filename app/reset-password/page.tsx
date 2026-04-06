@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2.5 mb-2">
-            <div className="w-[34px] h-[34px] rounded-[9px] bg-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-[34px] h-[34px] rounded-[9px] bg-[#0071e3] flex items-center justify-center shrink-0">
               <svg width="18" height="14" viewBox="0 0 18 14" fill="white">
                 <rect x="0"     y="10" width="2.5" height="4"  rx="1.25"/>
                 <rect x="3.75"  y="5"  width="2.5" height="9"  rx="1.25"/>
@@ -67,7 +67,7 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full bg-[var(--c-bg)] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-[var(--c-bg)] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] transition-colors"
               />
               <input
                 type="password"
@@ -76,13 +76,13 @@ export default function ResetPasswordPage() {
                 onChange={(e) => setConfirm(e.target.value)}
                 required
                 minLength={6}
-                className="w-full bg-[var(--c-bg)] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-[var(--c-bg)] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] transition-colors"
               />
               {error && <p className="text-red-400 text-xs">{error}</p>}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-2.5 rounded-xl transition-colors"
+                className="w-full bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-2.5 rounded-xl transition-colors"
               >
                 {loading ? "请稍候…" : "更新密码"}
               </button>

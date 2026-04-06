@@ -1369,7 +1369,7 @@ ${entries}${summary}${notes}</body></html>`;
 
   if (authLoading) return (
     <div className="flex h-screen bg-[var(--c-bg)] items-center justify-center">
-      <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <div className="w-5 h-5 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
     </div>
   );
   if (!user) return <AuthPage />;
@@ -1388,7 +1388,7 @@ ${entries}${summary}${notes}</body></html>`;
             onClick={(e) => { e.stopPropagation(); setShowSessionPanel((v) => !v); }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               showSessionPanel
-                ? "bg-indigo-600/20 text-indigo-400"
+                ? "bg-[#0071e3]/20 text-[#2997ff]"
                 : "text-slate-500 hover:text-slate-200 hover:bg-white/5"
             }`}
             title="课程列表"
@@ -1402,7 +1402,7 @@ ${entries}${summary}${notes}</body></html>`;
             )}
           </button>
           <div className="flex items-center gap-2 shrink-0">
-            <div className="w-[26px] h-[26px] rounded-[7px] bg-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-[26px] h-[26px] rounded-[7px] bg-[#0071e3] flex items-center justify-center shrink-0">
               <svg width="14" height="11" viewBox="0 0 14 11" fill="white">
                 <rect x="0"  y="8" width="2" height="3" rx="1"/>
                 <rect x="3"  y="4" width="2" height="7" rx="1"/>
@@ -1424,7 +1424,7 @@ ${entries}${summary}${notes}</body></html>`;
               disabled={busy}
               className={`px-2 sm:px-3 py-1 rounded-lg text-[13px] font-medium transition-colors disabled:opacity-40 ${
                 sourceLang === lang
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-[#0071e3] text-white"
                   : "text-slate-500 hover:text-slate-300"
               }`}
             >
@@ -1504,13 +1504,13 @@ ${entries}${summary}${notes}</body></html>`;
 
       {/* ── "正在查看历史课程" banner ── */}
       {!isViewingCurrent && currentSession && (
-        <div className="shrink-0 flex items-center justify-between bg-indigo-950/60 border-b border-indigo-900/40 px-5 py-1.5">
-          <span className="text-xs text-indigo-400">
+        <div className="shrink-0 flex items-center justify-between bg-[#1d1d1f]/90 border-b border-white/8 px-5 py-1.5">
+          <span className="text-xs text-[#2997ff]">
             正在查看：<span className="font-semibold">{viewingSession?.title}</span>
           </span>
           <button
             onClick={() => setViewingSessionId(currentSessionId)}
-            className="text-xs text-indigo-400 hover:text-indigo-200 underline"
+            className="text-xs text-[#2997ff] hover:text-[#5ac8fa] underline"
           >
             返回当前课程
           </button>
@@ -1539,7 +1539,7 @@ ${entries}${summary}${notes}</body></html>`;
                 <button
                   onClick={handleNewSession}
                   disabled={busy}
-                  className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1 text-xs text-[#2997ff] hover:text-[#2997ff] disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -1555,7 +1555,7 @@ ${entries}${summary}${notes}</body></html>`;
                   placeholder="搜索课程…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[var(--c-bg)] border border-white/8 rounded-lg px-3 py-1.5 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                  className="w-full bg-[var(--c-bg)] border border-white/8 rounded-lg px-3 py-1.5 text-xs text-slate-300 placeholder-slate-600 focus:outline-none focus:border-[#0071e3]/50 transition-colors"
                 />
               </div>
 
@@ -1570,9 +1570,9 @@ ${entries}${summary}${notes}</body></html>`;
                     const isActive = s.id === currentSessionId;
                     const isViewing = s.id === viewId;
                     return (
-                      <div key={s.id} className={`group relative border-b border-white/3 ${isViewing ? "bg-indigo-600/10" : "hover:bg-white/4"}`}>
+                      <div key={s.id} className={`group relative border-b border-white/3 ${isViewing ? "bg-[#0071e3]/10" : "hover:bg-white/4"}`}>
                         <div
-                          className={`w-full text-left px-4 py-3 transition-colors cursor-pointer ${isViewing ? "border-l-2 border-l-indigo-500" : "border-l-2 border-l-transparent"}`}
+                          className={`w-full text-left px-4 py-3 transition-colors cursor-pointer ${isViewing ? "border-l-2 border-l-[#0071e3]" : "border-l-2 border-l-transparent"}`}
                           onClick={() => { setViewingSessionId(s.id); setShowSessionPanel(false); }}
                         >
                           <div className="flex items-center gap-1 mb-0.5 min-w-0 pr-6 md:pr-0">
@@ -1588,7 +1588,7 @@ ${entries}${summary}${notes}</body></html>`;
                                   if (e.key === "Escape") setRenamingSessionId("");
                                 }}
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex-1 text-[13px] font-medium bg-transparent border-b border-indigo-500 text-slate-200 focus:outline-none"
+                                className="flex-1 text-[13px] font-medium bg-transparent border-b border-[#0071e3] text-slate-200 focus:outline-none"
                               />
                             ) : (
                               <>
@@ -1614,7 +1614,7 @@ ${entries}${summary}${notes}</body></html>`;
                           </div>
                           <div className="flex items-center gap-2 pl-3">
                             <span className="text-[10px] text-slate-600">{s.transcripts.length} 条</span>
-                            {s.summary && <span className="text-[10px] text-indigo-500">有笔记</span>}
+                            {s.summary && <span className="text-[10px] text-[#2997ff]">有笔记</span>}
                             <span className="text-[10px] text-slate-700">{LANGUAGES[s.sourceLang].flag}→{LANGUAGES[s.targetLang].flag}</span>
                           </div>
                         </div>
@@ -1665,8 +1665,8 @@ ${entries}${summary}${notes}</body></html>`;
                     );
                   })()}
                   {correctionEnabled && correctingIds.has(t.id) && (
-                    <span className="flex items-center gap-1 text-[9px] text-indigo-500/70">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/70 animate-pulse shrink-0" />
+                    <span className="flex items-center gap-1 text-[9px] text-[#2997ff]/70">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2997ff]/70 animate-pulse shrink-0" />
                       AI处理中
                     </span>
                   )}
@@ -1687,13 +1687,13 @@ ${entries}${summary}${notes}</body></html>`;
                   </button>
                 </div>
                 <p className={`${textCls} ${leading} text-slate-200`}>{t.original}</p>
-                <div className="mt-1 pl-3 border-l-2 border-indigo-500/25">
+                <div className="mt-1 pl-3 border-l-2 border-[#0071e3]/25">
                   {t.translated
-                    ? <p className={`${textCls} ${leading} text-indigo-300/80`}>{t.translated}</p>
+                    ? <p className={`${textCls} ${leading} text-[#2997ff]/80`}>{t.translated}</p>
                     : (
                       <button
                         onClick={() => retranslate(t.id, t.original)}
-                        className="text-[12px] text-slate-600 hover:text-indigo-400 italic transition-colors"
+                        className="text-[12px] text-slate-600 hover:text-[#2997ff] italic transition-colors"
                       >
                         翻译失败，点击重试
                       </button>
@@ -1712,7 +1712,7 @@ ${entries}${summary}${notes}</body></html>`;
                 setUserScrolledUp(false);
                 transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-full shadow-xl transition-colors"
+              className="sticky bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs px-3 py-1.5 rounded-full shadow-xl transition-colors"
             >
               <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -1746,8 +1746,8 @@ ${entries}${summary}${notes}</body></html>`;
             {isViewingCurrent && interimText ? (
               <>
                 <p className={`${textCls} ${leading} text-slate-200 leading-snug`}>{interimText}</p>
-                <div className="mt-2 pl-3 border-l-2 border-indigo-500/30">
-                  <p className={`${textCls} ${leading} text-indigo-300/80 leading-snug`}>
+                <div className="mt-2 pl-3 border-l-2 border-[#0071e3]/30">
+                  <p className={`${textCls} ${leading} text-[#2997ff]/80 leading-snug`}>
                     {interimTrans || <span className="text-slate-600 italic text-[13px]">翻译中…</span>}
                   </p>
                 </div>
@@ -1787,7 +1787,7 @@ ${entries}${summary}${notes}</body></html>`;
               {viewingSession?.summary && (
                 <div className="flex items-center justify-between">
                   <span className="text-[12px] text-slate-500">笔记</span>
-                  <span className="text-[10px] text-indigo-400">已生成 ✓</span>
+                  <span className="text-[10px] text-[#2997ff]">已生成 ✓</span>
                 </div>
               )}
             </div>
@@ -1800,7 +1800,7 @@ ${entries}${summary}${notes}</body></html>`;
               value={viewingSession?.notes ?? ""}
               onChange={(e) => updateSessionNotes(e.target.value)}
               placeholder="在这里记录要点、疑问…"
-              className="flex-1 bg-[var(--c-surface)] border border-white/5 rounded-lg p-3 text-[13px] text-slate-300 placeholder-slate-700 resize-none focus:outline-none focus:border-indigo-500/50 leading-relaxed"
+              className="flex-1 bg-[var(--c-surface)] border border-white/5 rounded-lg p-3 text-[13px] text-slate-300 placeholder-slate-700 resize-none focus:outline-none focus:border-[#0071e3]/50 leading-relaxed"
             />
           </div>
 
@@ -1830,7 +1830,7 @@ ${entries}${summary}${notes}</body></html>`;
                 <div>
                   <p className="text-[11px] text-slate-600 mb-1">我的邀请码</p>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[13px] text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-lg tracking-widest">{referralCode}</span>
+                    <span className="font-mono text-[13px] text-[#2997ff] bg-[#0071e3]/10 px-2 py-1 rounded-lg tracking-widest">{referralCode}</span>
                     <button
                       onClick={() => { navigator.clipboard.writeText(referralCode); setInviteCopied(true); setTimeout(() => setInviteCopied(false), 1500); }}
                       className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
@@ -1849,7 +1849,7 @@ ${entries}${summary}${notes}</body></html>`;
                     placeholder="输入兑换码"
                     value={redeemInput}
                     onChange={(e) => setRedeemInput(e.target.value.toUpperCase())}
-                    className="flex-1 bg-white/5 border border-white/8 rounded-lg px-2 py-1.5 text-[12px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono min-w-0"
+                    className="flex-1 bg-white/5 border border-white/8 rounded-lg px-2 py-1.5 text-[12px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] font-mono min-w-0"
                   />
                   <button
                     onClick={async () => {
@@ -1865,7 +1865,7 @@ ${entries}${summary}${notes}</body></html>`;
                       setRedeemLoading(false);
                     }}
                     disabled={redeemLoading || !redeemInput.trim()}
-                    className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-[12px] px-3 py-1.5 rounded-lg transition-colors shrink-0"
+                    className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-40 text-white text-[12px] px-3 py-1.5 rounded-lg transition-colors shrink-0"
                   >{redeemLoading ? "…" : "兑换"}</button>
                 </div>
                 {redeemMsg && <p className={`text-[11px] mt-1.5 ${redeemMsg.ok ? "text-emerald-400" : "text-red-400"}`}>{redeemMsg.text}</p>}
@@ -1883,7 +1883,7 @@ ${entries}${summary}${notes}</body></html>`;
 
       {/* ── Live strip (mobile only, only during active recording) ── */}
       {isViewingCurrent && isRecording && (
-        <div className="lg:hidden shrink-0 border-t border-indigo-500/20 bg-[var(--c-bg-deep)] px-5 py-3 min-h-[56px] max-h-40">
+        <div className="lg:hidden shrink-0 border-t border-[#0071e3]/20 bg-[var(--c-bg-deep)] px-5 py-3 min-h-[56px] max-h-40">
           <div className="flex items-center gap-2 mb-1.5">
             {isPaused ? (
               <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">已暂停</span>
@@ -1908,8 +1908,8 @@ ${entries}${summary}${notes}</body></html>`;
           ) : interimText ? (
             <>
               <p className={`${textCls} ${leading} text-slate-300`}>{interimText}</p>
-              <div className="mt-1 pl-3 border-l-2 border-indigo-500/30">
-                <p className={`${textCls} ${leading} text-indigo-300/70`}>
+              <div className="mt-1 pl-3 border-l-2 border-[#0071e3]/30">
+                <p className={`${textCls} ${leading} text-[#2997ff]/70`}>
                   {interimTrans || <span className="text-slate-600 italic">翻译中…</span>}
                 </p>
               </div>
@@ -2066,7 +2066,7 @@ ${entries}${summary}${notes}</body></html>`;
                           value={editingName}
                           onChange={(e) => setEditingName(e.target.value.slice(0, 30))}
                           placeholder="设置昵称"
-                          className="flex-1 bg-white/5 border border-white/8 rounded-lg px-2 py-1.5 text-[12px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 min-w-0"
+                          className="flex-1 bg-white/5 border border-white/8 rounded-lg px-2 py-1.5 text-[12px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] min-w-0"
                         />
                         <button
                           disabled={nameSaving || editingName.trim() === displayName}
@@ -2087,7 +2087,7 @@ ${entries}${summary}${notes}</body></html>`;
                             setNameSaving(false);
                             setTimeout(() => setNameMsg(null), 2000);
                           }}
-                          className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-[11px] px-2 py-1.5 rounded-lg transition-colors shrink-0"
+                          className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-40 text-white text-[11px] px-2 py-1.5 rounded-lg transition-colors shrink-0"
                         >
                           {nameSaving ? "…" : nameMsg?.ok ? "✓" : "保存"}
                         </button>
@@ -2103,7 +2103,7 @@ ${entries}${summary}${notes}</body></html>`;
                     </div>
                     <div className="flex gap-1">
                       <button disabled={isRecording} onClick={() => setTranscriptionEngine("deepgram")}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors disabled:opacity-40 ${transcriptionEngine === "deepgram" ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"}`}
+                        className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors disabled:opacity-40 ${transcriptionEngine === "deepgram" ? "bg-[#0071e3] text-white" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"}`}
                       >实时</button>
                       <button disabled={isRecording} onClick={() => setTranscriptionEngine("whisper")}
                         className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors disabled:opacity-40 ${transcriptionEngine === "whisper" ? "bg-purple-600/80 text-white" : "text-slate-500 hover:text-slate-300 hover:bg-white/5"}`}
@@ -2118,7 +2118,7 @@ ${entries}${summary}${notes}</body></html>`;
                       <p className="text-[10px] text-slate-600">识别纠错 + 翻译优化</p>
                     </div>
                     <button onClick={() => setCorrectionEnabled((v) => !v)}
-                      className={`relative w-9 h-5 rounded-full transition-colors flex items-center shrink-0 ${correctionEnabled ? "bg-indigo-600" : "bg-slate-700"}`}
+                      className={`relative w-9 h-5 rounded-full transition-colors flex items-center shrink-0 ${correctionEnabled ? "bg-[#0071e3]" : "bg-slate-700"}`}
                     >
                       <span className={`absolute w-4 h-4 rounded-full bg-white shadow transition-all duration-200 ${correctionEnabled ? "left-[18px]" : "left-[2px]"}`} />
                     </button>
@@ -2152,7 +2152,7 @@ ${entries}${summary}${notes}</body></html>`;
             <div className="flex items-center gap-2">
             {!isRecording ? (
               <button onClick={startRecording} disabled={isConnecting || !isOnline} title="开始上课 (Space)"
-                className="btn-record flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 disabled:opacity-50 text-white rounded-full text-sm font-semibold transition-all border border-indigo-400/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_8px_24px_rgba(99,102,241,0.4)] touch-manipulation"
+                className="btn-record flex items-center gap-2 px-5 py-2 bg-[#0071e3] hover:bg-[#0077ed] active:scale-95 disabled:opacity-50 text-white rounded-full text-sm font-semibold transition-all border border-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_4px_20px_rgba(0,113,227,0.55)] touch-manipulation"
               >
                 <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
                 {isConnecting ? "连接中…" : "开始上课"}
@@ -2213,7 +2213,7 @@ ${entries}${summary}${notes}</body></html>`;
               >A</button>
               <div className="flex gap-0.5 px-1">
                 {FONT_SIZES.map((_, i) => (
-                  <div key={i} className={`w-1 h-1 rounded-full transition-colors ${i === fontSizeIdx ? "bg-indigo-400" : "bg-slate-700"}`} />
+                  <div key={i} className={`w-1 h-1 rounded-full transition-colors ${i === fontSizeIdx ? "bg-[#2997ff]" : "bg-slate-700"}`} />
                 ))}
               </div>
               <button onClick={() => setFontSizeIdx((i) => Math.min(FONT_SIZES.length - 1, i + 1))} disabled={fontSizeIdx === FONT_SIZES.length - 1}
@@ -2256,7 +2256,7 @@ ${entries}${summary}${notes}</body></html>`;
               value={viewingSession?.notes ?? ""}
               onChange={(e) => updateSessionNotes(e.target.value)}
               placeholder="在这里记录要点、疑问…"
-              className="flex-1 bg-[var(--c-bg)] border border-white/5 rounded-lg p-3 text-[13px] text-slate-300 placeholder-slate-700 resize-none focus:outline-none focus:border-indigo-500/50 leading-relaxed min-h-[120px]"
+              className="flex-1 bg-[var(--c-bg)] border border-white/5 rounded-lg p-3 text-[13px] text-slate-300 placeholder-slate-700 resize-none focus:outline-none focus:border-[#0071e3]/50 leading-relaxed min-h-[120px]"
             />
             {sessions.length > 0 && (
               <div className="mt-4 pt-4 border-t border-white/5 shrink-0">
@@ -2310,7 +2310,7 @@ ${entries}${summary}${notes}</body></html>`;
                     value={editingName}
                     onChange={(e) => setEditingName(e.target.value.slice(0, 30))}
                     placeholder="设置昵称（最多30字）"
-                    className="flex-1 bg-white/5 border border-white/8 rounded-lg px-3 py-2 text-[13px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                    className="flex-1 bg-white/5 border border-white/8 rounded-lg px-3 py-2 text-[13px] text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3]"
                   />
                   <button
                     disabled={nameSaving || editingName.trim() === displayName}
@@ -2331,7 +2331,7 @@ ${entries}${summary}${notes}</body></html>`;
                       setNameSaving(false);
                       setTimeout(() => setNameMsg(null), 2000);
                     }}
-                    className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-[12px] px-3 py-2 rounded-lg transition-colors shrink-0"
+                    className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-40 text-white text-[12px] px-3 py-2 rounded-lg transition-colors shrink-0"
                   >
                     {nameSaving ? "…" : "保存"}
                   </button>
@@ -2350,7 +2350,7 @@ ${entries}${summary}${notes}</body></html>`;
               </div>
               <div className="flex gap-1.5 shrink-0 ml-4">
                 <button disabled={isRecording} onClick={() => setTranscriptionEngine("deepgram")}
-                  className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors disabled:opacity-40 touch-manipulation ${transcriptionEngine === "deepgram" ? "bg-indigo-600 text-white" : "text-slate-500 bg-white/5 active:bg-white/10"}`}
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors disabled:opacity-40 touch-manipulation ${transcriptionEngine === "deepgram" ? "bg-[#0071e3] text-white" : "text-slate-500 bg-white/5 active:bg-white/10"}`}
                 >实时</button>
                 <button disabled={isRecording} onClick={() => setTranscriptionEngine("whisper")}
                   className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors disabled:opacity-40 touch-manipulation ${transcriptionEngine === "whisper" ? "bg-purple-600/80 text-white" : "text-slate-500 bg-white/5 active:bg-white/10"}`}
@@ -2365,7 +2365,7 @@ ${entries}${summary}${notes}</body></html>`;
                 <p className="text-[11px] text-slate-600 mt-0.5">识别纠错 + 翻译优化</p>
               </div>
               <button onClick={() => setCorrectionEnabled((v) => !v)}
-                className={`relative w-11 h-6 rounded-full transition-colors flex items-center shrink-0 ml-4 touch-manipulation ${correctionEnabled ? "bg-indigo-600" : "bg-slate-700"}`}
+                className={`relative w-11 h-6 rounded-full transition-colors flex items-center shrink-0 ml-4 touch-manipulation ${correctionEnabled ? "bg-[#0071e3]" : "bg-slate-700"}`}
               >
                 <span className={`absolute w-5 h-5 rounded-full bg-white shadow transition-all duration-200 ${correctionEnabled ? "left-[22px]" : "left-[2px]"}`} />
               </button>
@@ -2425,7 +2425,7 @@ ${entries}${summary}${notes}</body></html>`;
                     <span className="text-slate-700 ml-1">（好友填写后，对方+60分钟，你+30分钟）</span>
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className="flex-1 font-mono text-sm text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-3 py-2 tracking-widest">
+                    <span className="flex-1 font-mono text-sm text-[#2997ff] bg-[#0071e3]/10 border border-[#0071e3]/20 rounded-lg px-3 py-2 tracking-widest">
                       {referralCode}
                     </span>
                     <button
@@ -2453,7 +2453,7 @@ ${entries}${summary}${notes}</body></html>`;
                     value={redeemInput}
                     onChange={(e) => { setRedeemInput(e.target.value.toUpperCase()); setRedeemMsg(null); }}
                     maxLength={20}
-                    className="flex-1 bg-[var(--c-bg)] border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono tracking-wider"
+                    className="flex-1 bg-[var(--c-bg)] border border-white/8 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] font-mono tracking-wider"
                   />
                   <button
                     disabled={redeemLoading || !redeemInput.trim()}
@@ -2478,7 +2478,7 @@ ${entries}${summary}${notes}</body></html>`;
                       }
                       setRedeemLoading(false);
                     }}
-                    className="px-3 py-2 rounded-lg text-[12px] bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white touch-manipulation shrink-0"
+                    className="px-3 py-2 rounded-lg text-[12px] bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-40 text-white touch-manipulation shrink-0"
                   >
                     {redeemLoading ? "…" : "兑换"}
                   </button>
@@ -2527,7 +2527,7 @@ ${entries}${summary}${notes}</body></html>`;
             <div className="flex-1 overflow-y-auto p-6">
               {isSummarizing ? (
                 <div className="flex flex-col items-center justify-center h-32 gap-4">
-                  <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
                   <span className="text-sm text-slate-500">正在生成课堂笔记…</span>
                 </div>
               ) : (
@@ -2539,7 +2539,7 @@ ${entries}${summary}${notes}</body></html>`;
               <div className="px-6 py-3 border-t border-white/5 shrink-0 flex items-center justify-between">
                 <button
                   onClick={() => copyText(currentSummary)}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                  className="text-xs text-[#2997ff] hover:text-[#2997ff] transition-colors"
                 >
                   {copied ? "✓ 已复制" : "复制到剪贴板"}
                 </button>
@@ -2580,7 +2580,7 @@ ${entries}${summary}${notes}</body></html>`;
                   if (annIdx + 1 < announcements.length) setAnnIdx(annIdx + 1);
                   else setAnnouncements([]);
                 }}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors"
+                className="bg-[#0071e3] hover:bg-[#0077ed] text-white text-sm font-medium px-4 py-2 rounded-xl transition-colors"
               >
                 {annIdx + 1 < announcements.length ? "下一条" : "知道了"}
               </button>
@@ -2604,7 +2604,7 @@ ${entries}${summary}${notes}</body></html>`;
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
                 rows={5}
-                className="w-full bg-[#0d1117] border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 resize-none"
+                className="w-full bg-[#1d1d1f] border border-white/8 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#0071e3] resize-none"
               />
               {feedbackMsg && (
                 <p className={`text-xs ${feedbackMsg.ok ? "text-emerald-400" : "text-red-400"}`}>{feedbackMsg.text}</p>
@@ -2630,7 +2630,7 @@ ${entries}${summary}${notes}</body></html>`;
                   }
                   setFeedbackSending(false);
                 }}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-xl transition-colors"
+                className="w-full bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-xl transition-colors"
               >
                 {feedbackSending ? "提交中…" : "提交"}
               </button>
@@ -2653,7 +2653,7 @@ ${entries}${summary}${notes}</body></html>`;
             <div className="flex-1 overflow-y-auto p-6 min-h-[80px]">
               {askLoading && (
                 <div className="flex justify-center">
-                  <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
                 </div>
               )}
               {!askLoading && askAnswer && (
@@ -2670,10 +2670,10 @@ ${entries}${summary}${notes}</body></html>`;
                 onChange={(e) => setAskQuestion(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askAboutLecture(); } }}
                 placeholder="例：今天课上提到了哪些重要概念？"
-                className="flex-1 bg-[var(--c-glass)] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-indigo-500/50"
+                className="flex-1 bg-[var(--c-glass)] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-[#0071e3]/50"
               />
               <button onClick={askAboutLecture} disabled={!askQuestion.trim() || askLoading}
-                className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all shrink-0"
+                className="px-4 py-2.5 bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all shrink-0"
               >
                 {askLoading ? "…" : "提问"}
               </button>
@@ -2739,14 +2739,14 @@ function SummaryRenderer({ text }: { text: string }) {
         );
         if (line.startsWith("- ") || line.startsWith("* ")) return (
           <p key={i} className="text-slate-300 leading-relaxed pl-4 flex gap-2">
-            <span className="text-indigo-500 shrink-0 mt-0.5">·</span>
+            <span className="text-[#2997ff] shrink-0 mt-0.5">·</span>
             <span><InlineFmt text={line.slice(2)} /></span>
           </p>
         );
         const nm = line.match(/^(\d+)\.\s(.*)$/);
         if (nm) return (
           <p key={i} className="text-slate-300 leading-relaxed pl-4 flex gap-2">
-            <span className="text-indigo-500 font-mono text-xs shrink-0 mt-1 tabular-nums">{nm[1]}.</span>
+            <span className="text-[#2997ff] font-mono text-xs shrink-0 mt-1 tabular-nums">{nm[1]}.</span>
             <span><InlineFmt text={nm[2]} /></span>
           </p>
         );
