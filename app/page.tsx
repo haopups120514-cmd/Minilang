@@ -1376,7 +1376,7 @@ ${entries}${summary}${notes}</body></html>`;
 
   return (
     <div
-      className={`flex flex-col h-dvh bg-[var(--c-bg)] text-[var(--c-text)] font-sans theme-transition${theme === "light" ? " light" : ""}`}
+      className={`ai-wrapper flex flex-col h-dvh bg-[var(--c-bg)] text-[var(--c-text)] font-sans theme-transition${theme === "light" ? " light" : ""}`}
       onClick={() => { setShowExport(false); setShowMicPicker(false); setShowSettings(false); }}
     >
       {/* ── Header ── */}

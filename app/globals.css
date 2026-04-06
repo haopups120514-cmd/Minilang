@@ -4,126 +4,195 @@
 
 /* ── Apple SF Pro font stack ─────────────────────────────────────────────── */
 :root {
-  --font-display: "SF Pro Display", "SF Pro Icons", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-body:    "SF Pro Text",    "SF Pro Icons", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "SF Pro Display", "SF Pro Icons", -apple-system, BlinkMacSystemFont,
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-body:    "SF Pro Text",    "SF Pro Icons", -apple-system, BlinkMacSystemFont,
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* ── Apple Intelligence — Aurora palette ─────────────────────────────────── */
+:root {
+  /* Iridescent record button gradient */
+  --ai-gradient: linear-gradient(135deg,
+    #a78bfa 0%,
+    #67c8f0 48%,
+    #5ddcb0 100%
+  );
+  /* Glow for iridescent elements */
+  --ai-glow:
+    0 0 20px rgba(167,139,250,0.25),
+    0 0 40px rgba(103,200,240,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.28),
+    0 4px 22px rgba(0,0,0,0.35);
 }
 
 /* ── Theme variables ──────────────────────────────────────────────────────── */
 :root {
-  /* Apple Dark */
-  --c-bg:       #000000;
-  --c-surface:  #1d1d1f;
-  --c-card:     #272729;
-  --c-bg-deep:  #000000;
+  /* Dark: very deep with slight purple-blue tint */
+  --c-bg:       rgba(8,  8,  22, 0.94);
+  --c-surface:  rgba(16, 16, 36, 0.90);
+  --c-card:     rgba(26, 26, 48, 0.88);
+  --c-bg-deep:  rgba(4,  4,  14, 0.97);
   --c-text:     #f5f5f7;
   --c-text-dim: #e8e8ed;
   --c-text-2:   #a1a1a6;
   --c-border:   rgba(255,255,255,0.08);
   --c-border-m: rgba(255,255,255,0.12);
   --c-border-s: rgba(255,255,255,0.04);
-  /* Glass — Apple frosted */
-  --c-glass:        rgba(255,255,255,0.08);
-  --c-glass-border: rgba(255,255,255,0.14);
-  --c-glass-hover:  rgba(255,255,255,0.13);
-  --c-inset-shine:  rgba(255,255,255,0.12);
-  /* Accent — Apple Blue (dark bg) */
-  --c-accent:       #2997ff;
+  /* Glass — enhanced frosted */
+  --c-glass:        rgba(255,255,255,0.07);
+  --c-glass-border: rgba(255,255,255,0.13);
+  --c-glass-hover:  rgba(255,255,255,0.11);
+  --c-inset-shine:  rgba(255,255,255,0.15);
+  /* Accent — aurora lavender */
+  --c-accent: #a78bfa;
 }
 
 .light {
-  /* Apple Light */
-  --c-bg:       #f5f5f7;
-  --c-surface:  #ffffff;
-  --c-card:     #e8e8ed;
-  --c-bg-deep:  #f0f0f5;
+  /* Light: crisp white with aurora tint */
+  --c-bg:       rgba(248, 248, 252, 0.95);
+  --c-surface:  rgba(255, 255, 255, 0.88);
+  --c-card:     rgba(238, 238, 248, 0.90);
+  --c-bg-deep:  rgba(242, 242, 250, 0.98);
   --c-text:     #1d1d1f;
   --c-text-dim: #3d3d3f;
   --c-text-2:   #6e6e73;
-  --c-border:   rgba(0,0,0,0.08);
-  --c-border-m: rgba(0,0,0,0.12);
-  --c-border-s: rgba(0,0,0,0.04);
-  /* Glass (light) */
-  --c-glass:        rgba(0,0,0,0.04);
-  --c-glass-border: rgba(0,0,0,0.10);
-  --c-glass-hover:  rgba(0,0,0,0.07);
-  --c-inset-shine:  rgba(0,0,0,0.03);
+  --c-border:   rgba(0,0,0,0.07);
+  --c-border-m: rgba(0,0,0,0.10);
+  --c-border-s: rgba(0,0,0,0.03);
+  /* Glass (light) — frosted white */
+  --c-glass:        rgba(255,255,255,0.60);
+  --c-glass-border: rgba(168,139,250,0.20);
+  --c-glass-hover:  rgba(255,255,255,0.72);
+  --c-inset-shine:  rgba(255,255,255,0.85);
   /* Accent (light) */
-  --c-accent:       #0071e3;
+  --c-accent: #7c3aed;
 }
 
 /* ── Base ────────────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; padding: 0; background-color: #000000; font-family: var(--font-body); }
 
-/* ── dvh fallback: Safari < 16 doesn't support dvh ──────────────────────── */
-/* h-dvh = 100dvh; provide 100vh fallback first, dvh overrides if supported */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+}
+
+/* Body = dark aurora base (always dark, light mode handled in wrapper) */
+body {
+  background-color: #040412;
+  background-image:
+    radial-gradient(ellipse 65% 55% at 5%  8%,  rgba(168,139,250,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 50% at 95% 5%,  rgba(125,211,252,0.15) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 80% 95%, rgba(110,231,183,0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 45% at 20% 92%, rgba(249,168,212,0.11) 0%, transparent 55%);
+  background-attachment: fixed;
+}
+
+/* ── App wrapper — aurora layer (renders ON TOP of bg-[var(--c-bg)]) ──────── */
+/* Dark mode: subtle aurora on near-opaque dark surface */
+.ai-wrapper {
+  background-image:
+    radial-gradient(ellipse 65% 55% at 5%  8%,  rgba(168,139,250,0.09) 0%, transparent 62%),
+    radial-gradient(ellipse 55% 50% at 95% 5%,  rgba(125,211,252,0.07) 0%, transparent 62%),
+    radial-gradient(ellipse 50% 60% at 80% 95%, rgba(110,231,183,0.06) 0%, transparent 62%),
+    radial-gradient(ellipse 60% 45% at 20% 92%, rgba(249,168,212,0.06) 0%, transparent 62%);
+  background-attachment: fixed;
+}
+
+/* Light mode: more visible, pastel blooms on white */
+.ai-wrapper.light {
+  background-image:
+    radial-gradient(ellipse 65% 55% at 5%  8%,  rgba(168,139,250,0.26) 0%, transparent 58%),
+    radial-gradient(ellipse 55% 50% at 95% 5%,  rgba(125,211,252,0.22) 0%, transparent 58%),
+    radial-gradient(ellipse 50% 60% at 80% 95%, rgba(110,231,183,0.18) 0%, transparent 58%),
+    radial-gradient(ellipse 60% 45% at 20% 92%, rgba(249,168,212,0.16) 0%, transparent 58%);
+  background-attachment: fixed;
+}
+
+/* ── dvh fallback ────────────────────────────────────────────────────────── */
 .h-dvh {
   height: 100vh;
   height: 100dvh;
+}
+
+/* ── Record button — Apple Intelligence iridescent gradient ──────────────── */
+.btn-record {
+  background: var(--ai-gradient) !important;
+  border-color: transparent !important;
+  box-shadow: var(--ai-glow) !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.22);
+}
+.btn-record:hover {
+  filter: brightness(1.08) saturate(1.06) !important;
+}
+.light .btn-record {
+  box-shadow:
+    0 0 18px rgba(167,139,250,0.30),
+    0 0 36px rgba(103,200,240,0.20),
+    inset 0 1px 0 rgba(255,255,255,0.45),
+    0 4px 16px rgba(0,0,0,0.14) !important;
+}
+
+/* ── Stop button ─────────────────────────────────────────────────────────── */
+.light .btn-stop {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.15) !important;
 }
 
 /* ── Smooth theme transitions ─────────────────────────────────────────────── */
 .theme-transition,
 .theme-transition * {
   transition:
-    background-color 0.2s ease,
-    border-color     0.2s ease,
-    box-shadow       0.2s ease,
-    color            0.15s ease !important;
+    background-color 0.25s ease,
+    border-color     0.25s ease,
+    box-shadow       0.25s ease,
+    color            0.20s ease !important;
 }
 
-/* ── Light mode text overrides ────────────────────────────────────────────── */
-.light .text-white   { color: var(--c-text)     !important; }
-.light .text-slate-100 { color: var(--c-text)   !important; }
+/* ── Light mode text overrides ───────────────────────────────────────────── */
+.light .text-white     { color: var(--c-text)     !important; }
+.light .text-slate-100 { color: var(--c-text)     !important; }
 .light .text-slate-200 { color: var(--c-text-dim) !important; }
-.light .text-slate-300 { color: var(--c-text-2) !important; }
+.light .text-slate-300 { color: var(--c-text-2)   !important; }
 
-/* ── Light mode border overrides ──────────────────────────────────────────── */
-.light .border-white\/5  { border-color: var(--c-border)          !important; }
-.light .border-white\/8  { border-color: var(--c-border-m)        !important; }
-.light .border-white\/10 { border-color: rgba(0,0,0,0.12)         !important; }
-.light .border-white\/3  { border-color: var(--c-border-s)        !important; }
-.light .border-white\/4  { border-color: rgba(0,0,0,0.05)         !important; }
+/* ── Light mode border overrides ─────────────────────────────────────────── */
+.light .border-white\/5  { border-color: var(--c-border)   !important; }
+.light .border-white\/8  { border-color: var(--c-border-m) !important; }
+.light .border-white\/10 { border-color: rgba(0,0,0,0.12)  !important; }
+.light .border-white\/3  { border-color: var(--c-border-s) !important; }
+.light .border-white\/4  { border-color: rgba(0,0,0,0.05)  !important; }
 
-/* ── Light mode bg/hover overrides ───────────────────────────────────────── */
-.light .bg-white\/5        { background-color: rgba(0,0,0,0.04) !important; }
-.light .bg-white\/8        { background-color: rgba(0,0,0,0.06) !important; }
+/* ── Light mode bg/hover overrides ──────────────────────────────────────── */
+.light .bg-white\/5              { background-color: rgba(0,0,0,0.04) !important; }
+.light .bg-white\/8              { background-color: rgba(0,0,0,0.06) !important; }
 .light .hover\:bg-white\/5:hover { background-color: rgba(0,0,0,0.05) !important; }
 .light .hover\:bg-white\/4:hover { background-color: rgba(0,0,0,0.04) !important; }
 .light .hover\:bg-white\/8:hover { background-color: rgba(0,0,0,0.06) !important; }
-.light .hover\:bg-white\/5 { background-color: rgba(0,0,0,0.04) !important; }
+.light .hover\:bg-white\/5       { background-color: rgba(0,0,0,0.04) !important; }
 
-/* ── Light mode hover text overrides ─────────────────────────────────────── */
-.light .hover\:text-slate-200:hover { color: var(--c-text-2)  !important; }
-.light .hover\:text-slate-300:hover { color: var(--c-text)    !important; }
-.light .hover\:text-slate-400:hover { color: var(--c-text-2)  !important; }
+/* ── Light mode hover text overrides ────────────────────────────────────── */
+.light .hover\:text-slate-200:hover { color: var(--c-text-2) !important; }
+.light .hover\:text-slate-300:hover { color: var(--c-text)   !important; }
+.light .hover\:text-slate-400:hover { color: var(--c-text-2) !important; }
 
-/* ── Light mode accent text / border ─────────────────────────────────────── */
-.light .text-indigo-300\/80  { color: rgba(0,113,227,0.90)  !important; }
-.light .text-indigo-300      { color: rgba(0,113,227,0.90)  !important; }
-.light .text-indigo-400      { color: #0071e3               !important; }
-.light .border-indigo-500\/25 { border-color: rgba(0,113,227,0.30) !important; }
-.light .border-indigo-500\/30 { border-color: rgba(0,113,227,0.35) !important; }
+/* ── Light mode accent (aurora lavender → purple) ────────────────────────── */
+.light .text-\[\#2997ff\]      { color: #7c3aed !important; }
+.light .text-\[\#2997ff\]\/80  { color: rgba(124,58,237,0.88) !important; }
+.light .text-\[\#2997ff\]\/70  { color: rgba(124,58,237,0.78) !important; }
+.light .border-\[\#0071e3\]\/20 { border-color: rgba(124,58,237,0.22) !important; }
+.light .border-\[\#0071e3\]\/25 { border-color: rgba(124,58,237,0.28) !important; }
+.light .border-\[\#0071e3\]\/30 { border-color: rgba(124,58,237,0.32) !important; }
 
-/* ── Light mode record / stop button glow ────────────────────────────────── */
-.light .btn-record {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.2) !important;
-}
-.light .btn-stop {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.15) !important;
-}
-
-/* ── Light mode: soften live sidebar interim translation border ───────────── */
-.light .border-indigo-500\/20 { border-color: rgba(0,113,227,0.25) !important; }
-
-/* ── iOS safe-area: footer 不被 Home Indicator 遮挡 ─────────────────────────── */
+/* ── iOS safe-area ───────────────────────────────────────────────────────── */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .mobile-footer-safe {
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   }
 }
 
-/* ── 隐藏横向滚动条（控制栏） ────────────────────────────────────────────────── */
+/* ── Hide scrollbar ──────────────────────────────────────────────────────── */
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
