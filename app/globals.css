@@ -197,3 +197,10 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Toast slide-in ──────────────────────────────────────────────────────── */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)     scale(1);    }
+}
+.toast-item { animation: toast-in 0.2s ease forwards; }

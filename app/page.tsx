@@ -193,7 +193,6 @@ export default function Mimilang() {
   const [redeemInput,      setRedeemInput]      = useState("");
   const [redeemMsg,        setRedeemMsg]        = useState<{ ok: boolean; text: string } | null>(null);
   const [redeemLoading,    setRedeemLoading]    = useState(false);
-  const [inviteCopied,     setInviteCopied]     = useState(false);
 
   // Username
   const [displayName,      setDisplayName]      = useState("");
@@ -214,6 +213,11 @@ export default function Mimilang() {
   const [askQuestion, setAskQuestion] = useState("");
   const [askAnswer,   setAskAnswer]   = useState("");
   const [askLoading,  setAskLoading]  = useState(false);
+
+  // Onboarding & toasts
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [toasts, setToasts] = useState<{ id: number; msg: string; type: "ok" | "err" | "info" }[]>([]);
+  const toastIdRef = useRef(0);
 
   // Refs
   const wsRef             = useRef<WebSocket | null>(null);
@@ -265,6 +269,13 @@ export default function Mimilang() {
   useEffect(() => { isConnectingRef.current  = isConnecting;      }, [isConnecting]);
   useEffect(() => { translationModeRef.current = translationMode; }, [translationMode]);
 
+  // ── Toast helper ──────────────────────────────────────────────────────────
+  const toast = useCallback((msg: string, type: "ok" | "err" | "info" = "info") => {
+    const id = ++toastIdRef.current;
+    setToasts((prev) => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
+  }, []);
+
   // ── Derived ─────────────────────────────────────────────────────────────────
   const viewId           = viewingSessionId || currentSessionId;
   const viewingSession   = sessions.find((s) => s.id === viewId);
@@ -314,6 +325,12 @@ export default function Mimilang() {
     });
   }, [user]);
 
+  // ── Onboarding: show once for new users ──────────────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+    try { if (!localStorage.getItem("mimilang-onboarded")) setShowOnboarding(true); } catch {}
+  }, [user]);
+
   // ── Credits: deduct after recording ends ─────────────────────────────────────
   const prevIsRecordingRef = useRef(false);
   useEffect(() => {
@@ -351,12 +368,12 @@ export default function Mimilang() {
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
-    const on  = () => setIsOnline(true);
+    const on  = () => { setIsOnline(true); toast("网络已恢复", "ok"); };
     const off = () => setIsOnline(false);
     window.addEventListener("online",  on);
     window.addEventListener("offline", off);
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
-  }, []);
+  }, [toast]);
 
   // ── Theme init — light mode default ─────────────────────────────────────
   useEffect(() => {
@@ -386,6 +403,13 @@ export default function Mimilang() {
     }, 1000);
     return () => clearInterval(id);
   }, [summaryCooldownEnd]);
+
+  // ── Error auto-dismiss (6s) ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (!error) return;
+    const id = setTimeout(() => setError(""), 6000);
+    return () => clearTimeout(id);
+  }, [error]);
 
   // ── Persistence (IndexedDB, with localStorage migration) ────────────────────
   useEffect(() => {
@@ -1881,10 +1905,10 @@ ${entries}${summary}${notes}</body></html>`;
               <div className="flex items-center gap-2">
                 {referralCode && (
                   <button
-                    onClick={() => { navigator.clipboard.writeText(referralCode); setInviteCopied(true); setTimeout(() => setInviteCopied(false), 1500); }}
+                    onClick={() => { navigator.clipboard.writeText(referralCode).then(() => toast("已复制", "ok")); }}
                     className="text-[10px] font-mono text-[#2997ff] bg-[#0071e3]/10 px-2 py-1 rounded-md tracking-widest shrink-0 hover:bg-[#0071e3]/20 transition-colors"
                     title="点击复制邀请码"
-                  >{inviteCopied ? "已复制" : referralCode}</button>
+                  >{referralCode}</button>
                 )}
                 <input
                   type="text"
@@ -1902,7 +1926,7 @@ ${entries}${summary}${notes}</body></html>`;
                     if (!token) { setRedeemMsg({ ok: false, text: "请先登录" }); setRedeemLoading(false); return; }
                     const r = await fetch("/api/credits/redeem", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ code: redeemInput.trim() }) });
                     const d = await r.json();
-                    if (r.ok) { setRedeemMsg({ ok: true, text: `+${d.minutesAdded}m` }); setCreditsRemaining(d.minutesRemaining); setRedeemInput(""); }
+                    if (r.ok) { toast(`+${d.minutesAdded} 分钟`, "ok"); setCreditsRemaining(d.minutesRemaining); setRedeemInput(""); setRedeemMsg(null); }
                     else { setRedeemMsg({ ok: false, text: d.error }); }
                     setRedeemLoading(false);
                   }}
@@ -1910,7 +1934,7 @@ ${entries}${summary}${notes}</body></html>`;
                   className="bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-40 text-white text-[11px] px-2 py-1 rounded-md transition-colors shrink-0"
                 >{redeemLoading ? "…" : "兑换"}</button>
               </div>
-              {redeemMsg && <p className={`text-[10px] ${redeemMsg.ok ? "text-emerald-400" : "text-red-400"}`}>{redeemMsg.text}</p>}
+              {redeemMsg && !redeemMsg.ok && <p className="text-[10px] text-red-400">{redeemMsg.text}</p>}
               <button
                 onClick={() => setShowFeedback(true)}
                 className="w-full text-[10px] text-slate-600 hover:text-slate-400 transition-colors text-left"
@@ -2498,14 +2522,11 @@ ${entries}${summary}${notes}</body></html>`;
                     </span>
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(referralCode).then(() => {
-                          setInviteCopied(true);
-                          setTimeout(() => setInviteCopied(false), 2000);
-                        }).catch(() => {});
+                        navigator.clipboard.writeText(referralCode).then(() => toast("已复制", "ok")).catch(() => {});
                       }}
                       className="px-3 py-2 rounded-lg text-[12px] bg-white/5 active:bg-white/10 text-slate-400 touch-manipulation shrink-0"
                     >
-                      {inviteCopied ? "✓ 已复制" : "复制"}
+                      复制
                     </button>
                   </div>
                 </div>
@@ -2538,9 +2559,10 @@ ${entries}${summary}${notes}</body></html>`;
                       });
                       const d = await res.json();
                       if (res.ok) {
-                        setRedeemMsg({ ok: true, text: d.message });
+                        toast(`+${d.minutesAdded} 分钟`, "ok");
                         setCreditsRemaining(d.minutesRemaining);
                         setRedeemInput("");
+                        setRedeemMsg(null);
                       } else {
                         setRedeemMsg({ ok: false, text: d.error || "兑换失败" });
                       }
@@ -2551,8 +2573,8 @@ ${entries}${summary}${notes}</body></html>`;
                     {redeemLoading ? "…" : "兑换"}
                   </button>
                 </div>
-                {redeemMsg && (
-                  <p className={`text-[12px] mt-1.5 ${redeemMsg.ok ? "text-emerald-400" : "text-red-400"}`}>
+                {redeemMsg && !redeemMsg.ok && (
+                  <p className="text-[12px] mt-1.5 text-red-400">
                     {redeemMsg.text}
                   </p>
                 )}
@@ -2714,6 +2736,73 @@ ${entries}${summary}${notes}</body></html>`;
                 {feedbackSending ? "提交中…" : "提交"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Toast notifications ─────────────────────────────────────────────── */}
+      {toasts.length > 0 && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[70] flex flex-col items-center gap-2 pointer-events-none">
+          {toasts.map((t) => (
+            <div
+              key={t.id}
+              className={`toast-item px-4 py-2 rounded-xl text-sm font-medium shadow-lg backdrop-blur-sm ${
+                t.type === "ok"  ? "bg-emerald-500/90 text-white" :
+                t.type === "err" ? "bg-red-500/90 text-white" :
+                "bg-[var(--c-surface)] text-[var(--c-text)] border border-[var(--c-glass-border)]"
+              }`}
+            >
+              {t.msg}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Onboarding Modal ────────────────────────────────────────────────── */}
+      {showOnboarding && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)" }}
+        >
+          <div className="bg-[var(--c-surface)] border border-[var(--c-border)] rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="text-center mb-5">
+              <div
+                className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-3"
+                style={{ background: "var(--ai-gradient)" }}
+              >
+                <span className="text-white font-bold text-xl">M</span>
+              </div>
+              <h2 className="text-[var(--c-text)] font-semibold text-lg">欢迎使用 Mimilang</h2>
+              <p className="text-[var(--c-text-2)] text-sm mt-1">课堂同声传译，3步上手</p>
+            </div>
+            <div className="space-y-4 mb-6">
+              {[
+                { icon: "🎙", title: "开始录音", desc: "点击「开始上课」，Mimilang 实时识别并翻译课堂内容" },
+                { icon: "📖", title: "查看译文", desc: "原文与中文译文同步显示，支持字体大小调节" },
+                { icon: "📝", title: "生成笔记", desc: "课后点击「生成课堂笔记」，AI 自动整理知识点和重点词汇" },
+              ].map((step, i) => (
+                <div key={i} className="flex gap-3 items-start">
+                  <span className="text-xl shrink-0">{step.icon}</span>
+                  <div>
+                    <p className="text-[var(--c-text)] text-sm font-medium">{step.title}</p>
+                    <p className="text-[var(--c-text-2)] text-xs mt-0.5">{step.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[var(--c-text-2)] text-xs text-center mb-4">
+              每月免费 120 分钟，邀请好友可获得额外时长
+            </p>
+            <button
+              onClick={() => {
+                try { localStorage.setItem("mimilang-onboarded", "1"); } catch {}
+                setShowOnboarding(false);
+              }}
+              className="w-full py-2.5 rounded-xl text-white font-medium text-sm"
+              style={{ background: "var(--ai-gradient)" }}
+            >
+              开始使用
+            </button>
           </div>
         </div>
       )}
